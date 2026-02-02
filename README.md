@@ -10,5 +10,5 @@
 - Mật khẩu: **12345678**
 
 ### B3. truy cập http://26.91.146.177:5000
-hiện thông báo "Đã kết nối thành công!"
+nếu xuất hiện thông báo "Đã kết nối thành công!" là quá trình test đã thành công
 
