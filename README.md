@@ -6,5 +6,5 @@ B3: tải 3 file từ branch connect về máy
 B4: vào visual studio code, phần terminal, nhập lệnh npm start
 Chú ý: đuôi của đường dẫn phải đúng với đường dẫn đã tải 3 file ở trên, rồi mới nhập npm start
 (Ví dụ đường dẫn: Deepfake-detection\backend)
-
+B5: vào trình duyệt truy cập http://localhost:5000/ nếu nó hiện ra giao diện "đã kết nối thành công", "port: 5000, status: running" là đã test thành công.
 
