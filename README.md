@@ -1,10 +1,22 @@
-B1: tải ramind VPN
-B2: nhập tài khoản + mật khẩu
-(TK: Deepreal
-MK: 12345678)
-B3: tải 3 file từ branch connect về máy
-B4: vào visual studio code, phần terminal, nhập lệnh npm start
-Chú ý: đuôi của đường dẫn phải đúng với đường dẫn đã tải 3 file ở trên, rồi mới nhập npm start
-(Ví dụ đường dẫn: Deepfake-detection\backend)
-B5: vào trình duyệt truy cập http://localhost:5000/ nếu nó hiện ra giao diện "đã kết nối thành công", "port: 5000, status: running" là đã test thành công.
+# Website Deepfake Detection
 
+## 🔧 Hướng dẫn chạy hệ thống
+
+### B1. Cài VPN
+- Tải và cài **Radmin VPN**
+
+### B2. Đăng nhập
+- Tài khoản: **Deepreal**
+- Mật khẩu: **12345678**
+
+### B3. Tải source code
+- Checkout branch **Connect**
+- Tải **3 file backend** về máy
+
+### B4. Chạy server
+1. Mở **Visual Studio Code**
+2. Mở thư mục backend  
+   (ví dụ: `Deepfake-detection/backend`)
+3. Mở Terminal và chạy:
+```bash
+npm start
