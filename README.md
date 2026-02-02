@@ -13,8 +13,8 @@
 
 ### B4. Chạy server
 1. Mở **Visual Studio Code**
-2. Mở Terminal và chạy:
-npm start (lưu ý: đường dẫn trong terminal phải đúng với đường dẫn khi tải source code từ branch về)
+2. Mở Terminal và chạy: "npm start" hoặc "npm run dev"
+(lưu ý: đường dẫn trong terminal phải đúng với đường dẫn khi tải source code từ branch về)
 
 ### B5. Chạy server
 sau khi chạy, vào trình duyệt truy cập http://localhost:5000/ 
