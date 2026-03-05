@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\projects",
+    "\\projects\\my-project",
+    "\\projects\\my-project\\backend\\routes",
+    "\\projects\\my-project\\backend\\uploads",
+    "\\projects\\my-project\\frontend",
+    "\\projects\\my-project\\frontend\\src",
+    "\\projects\\my-project\\frontend\\src\\components",
+    "\\projects\\my-project\\frontend\\src\\pages",
+    "\\projects\\my-project\\frontend\\src\\services"
+  ],
+  "SelectedNode": "\\projects\\my-project\\backend",
+  "PreviewInSolutionExplorer": false
+}
