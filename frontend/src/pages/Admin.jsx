@@ -29,10 +29,9 @@ const downloadJson = (filename, data) => {
 export default function Admin() {
   const nav = useNavigate();
   const { user: sessionUser } = useSession();
-  const [tab, setTab] = useState("overview"); // overview | users | logs
+  const [tab, setTab] = useState("overview");
   const [users, setUsersState] = useState([]);
   const [logs, setLogsState] = useState([]);
-
   const [logType, setLogType] = useState("all");
   const [q, setQ] = useState("");
 
@@ -106,190 +105,153 @@ export default function Admin() {
   const exportLogs = () => downloadJson(`deepcheck-logs-${Date.now()}.json`, logs);
   const exportUsers = () => downloadJson(`deepcheck-users-${Date.now()}.json`, users);
 
+  const statCards = [
+    { label: "Total Users", value: stats.totalUsers, icon: "👥", color: "from-blue-500 to-cyan-500" },
+    { label: "Face Registered", value: stats.faceUsers, icon: "📸", color: "from-green-500 to-emerald-500" },
+    { label: "Disabled", value: stats.disabledUsers, icon: "🚫", color: "from-red-500 to-rose-500" },
+    { label: "Total Logs", value: stats.totalLogs, icon: "📋", color: "from-purple-500 to-violet-500" },
+    { label: "Total Logins", value: stats.logins, icon: "🔐", color: "from-amber-500 to-orange-500" },
+    { label: "Total Detections", value: stats.detects, icon: "🔍", color: "from-pink-500 to-rose-500" },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden">
-      {/* Background gradient mesh */}
+    <div className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden font-sans">
+      {/* Background */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-violet-600/20 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-cyan-600/15 rounded-full blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-fuchsia-600/10 rounded-full blur-[80px]" />
+        <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.02%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-500/20 to-transparent rounded-full blur-[150px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/15 to-transparent rounded-full blur-[120px]"></div>
       </div>
 
-      {/* Nav */}
-      <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-6xl mx-auto">
-        <Link to="/" className="flex items-center gap-2">
-          <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center text-lg font-bold">
-            D
-          </span>
-          <span className="font-semibold text-lg tracking-tight">DeepCheck</span>
-        </Link>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={refresh}
-            className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/15 text-sm font-medium transition border border-white/10"
-          >
-            Refresh
-          </button>
-          <Link
-            to="/"
-            className="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-sm font-medium transition border border-white/10 text-slate-300"
-          >
-            Back to home
+      {/* Navigation */}
+      <nav className="relative z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#3fb950] flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 group-hover:scale-105 transition-transform">
+              D
+            </div>
+            <span className="font-bold text-xl tracking-tight">DeepCheck</span>
           </Link>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={refresh}
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-sm font-medium transition border border-white/10"
+            >
+              Refresh
+            </button>
+            <Link to="/" className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-sm font-medium transition border border-white/10 text-gray-300">
+              Back to home
+            </Link>
+          </div>
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 pb-16">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 pb-16">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mt-6 mb-8">
           <div>
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-slate-500 text-sm mt-1">
-              User management • Activity logs • Basic statistics (in-memory)
-            </p>
+            <p className="text-gray-500 text-sm mt-1">User management • Activity logs • Statistics</p>
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={() => setTab("overview")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
-                tab === "overview"
-                  ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 border-transparent"
-                  : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setTab("users")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
-                tab === "users"
-                  ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 border-transparent"
-                  : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              Users
-            </button>
-            <button
-              onClick={() => setTab("logs")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
-                tab === "logs"
-                  ? "bg-gradient-to-r from-violet-600 to-fuchsia-600 border-transparent"
-                  : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
-              }`}
-            >
-              Logs
-            </button>
+            {["overview", "users", "logs"].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold border transition ${
+                  tab === t
+                    ? "bg-gradient-to-r from-[#238636] to-[#2ea043] border-transparent shadow-lg shadow-green-600/25"
+                    : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
         {tab === "overview" && (
-          <section className="grid md:grid-cols-3 gap-4">
-            {[
-              { label: "Total users", value: stats.totalUsers },
-              { label: "Face-registered users", value: stats.faceUsers },
-              { label: "Disabled users", value: stats.disabledUsers },
-              { label: "Total logs", value: stats.totalLogs },
-              { label: "Total logins", value: stats.logins },
-              { label: "Total checks", value: stats.detects },
-            ].map((c) => (
-              <div key={c.label} className="rounded-2xl bg-white/[0.03] border border-white/10 p-5">
-                <p className="text-slate-500 text-sm">{c.label}</p>
-                <p className="text-3xl font-bold mt-2">{c.value}</p>
+          <section className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {statCards.map((c, i) => (
+              <div key={i} className="group p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-white/15 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-gray-500 text-sm">{c.label}</p>
+                    <p className="text-4xl font-bold mt-2">{c.value}</p>
+                  </div>
+                  <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${c.color} flex items-center justify-center text-2xl shadow-lg`}>
+                    {c.icon}
+                  </div>
+                </div>
               </div>
             ))}
-            <div className="rounded-2xl bg-white/[0.03] border border-white/10 p-5 md:col-span-3">
-              <p className="text-slate-500 text-sm">Last activity</p>
-              <p className="text-lg font-medium mt-2">{formatDateTime(stats.lastActivity)}</p>
-              <div className="flex flex-wrap gap-2 mt-4">
-                <button
-                  onClick={exportUsers}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition"
-                >
-                  Export users JSON
-                </button>
-                <button
-                  onClick={exportLogs}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition"
-                >
-                  Export logs JSON
-                </button>
-                <button
-                  onClick={clearLogs}
-                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition text-rose-300"
-                >
-                  Clear logs
-                </button>
+            <div className="sm:col-span-2 lg:col-span-3 p-6 rounded-3xl bg-white/[0.03] border border-white/5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <p className="text-gray-500 text-sm">Last Activity</p>
+                  <p className="text-lg font-medium mt-1">{formatDateTime(stats.lastActivity)}</p>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  <button onClick={exportUsers} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition">
+                    Export Users
+                  </button>
+                  <button onClick={exportLogs} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition">
+                    Export Logs
+                  </button>
+                  <button onClick={clearLogs} className="px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-sm font-medium transition">
+                    Clear Logs
+                  </button>
+                </div>
               </div>
             </div>
           </section>
         )}
 
         {tab === "users" && (
-          <section className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
-            <div className="p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <section className="rounded-3xl bg-white/[0.03] border border-white/10 overflow-hidden">
+            <div className="p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/5">
               <div>
-                <h2 className="text-xl font-bold">User accounts</h2>
-                <p className="text-slate-500 text-sm mt-1">In-memory (session only)</p>
+                <h2 className="text-xl font-bold">User Accounts</h2>
+                <p className="text-gray-500 text-sm mt-1">In-memory (session only)</p>
               </div>
-              <button
-                onClick={exportUsers}
-                className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition"
-              >
+              <button onClick={exportUsers} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition">
                 Export
               </button>
             </div>
-            <div className="overflow-auto">
-              <table className="min-w-[900px] w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-[1000px] w-full text-sm">
                 <thead className="bg-white/[0.03]">
                   <tr>
-                    {["Name", "Email", "Phone", "DOB", "Face", "Disabled", "Created", "Last login", "Actions"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-slate-300">
-                        {h}
-                      </th>
+                    {["Name", "Email", "Phone", "DOB", "Face", "Disabled", "Created", "Last Login", "Actions"].map((h) => (
+                      <th key={h} className="text-left px-5 py-4 font-semibold text-gray-300">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-white/5">
                   {users.length === 0 ? (
                     <tr>
-                      <td className="px-4 py-6 text-slate-500" colSpan={9}>
-                        No users yet.
-                      </td>
+                      <td className="px-5 py-8 text-gray-500" colSpan={9}>No users yet.</td>
                     </tr>
                   ) : (
                     users.map((u) => (
-                      <tr key={u.id || u.email} className={u.disabled ? "opacity-60" : ""}>
-                        <td className="px-4 py-3 text-slate-200">{u.name || "—"}</td>
-                        <td className="px-4 py-3 text-slate-200">{u.email}</td>
-                        <td className="px-4 py-3 text-slate-400">{u.phone || "—"}</td>
-                        <td className="px-4 py-3 text-slate-400">{u.dodate || "—"}</td>
-                        <td className="px-4 py-3">
-                          {u.hasFace ? (
-                            <span className="text-emerald-400 font-medium">Yes</span>
-                          ) : (
-                            <span className="text-slate-500">No</span>
-                          )}
+                      <tr key={u.id || u.email} className={`hover:bg-white/[0.02] transition ${u.disabled ? "opacity-50" : ""}`}>
+                        <td className="px-5 py-4 text-white">{u.name || "—"}</td>
+                        <td className="px-5 py-4 text-white">{u.email}</td>
+                        <td className="px-5 py-4 text-gray-400">{u.phone || "—"}</td>
+                        <td className="px-5 py-4 text-gray-400">{u.dodate || "—"}</td>
+                        <td className="px-5 py-4">
+                          {u.hasFace ? <span className="text-green-400 font-medium">Yes</span> : <span className="text-gray-500">No</span>}
                         </td>
-                        <td className="px-4 py-3">
-                          {u.disabled ? (
-                            <span className="text-rose-300 font-medium">Yes</span>
-                          ) : (
-                            <span className="text-slate-500">No</span>
-                          )}
+                        <td className="px-5 py-4">
+                          {u.disabled ? <span className="text-red-400 font-medium">Yes</span> : <span className="text-gray-500">No</span>}
                         </td>
-                        <td className="px-4 py-3 text-slate-500">{formatDateTime(u.createdAt)}</td>
-                        <td className="px-4 py-3 text-slate-500">{formatDateTime(u.lastLoginAt)}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-5 py-4 text-gray-500">{formatDateTime(u.createdAt)}</td>
+                        <td className="px-5 py-4 text-gray-500">{formatDateTime(u.lastLoginAt)}</td>
+                        <td className="px-5 py-4">
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => toggleDisable(u.email)}
-                              className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition"
-                            >
+                            <button onClick={() => toggleDisable(u.email)} className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition">
                               {u.disabled ? "Enable" : "Disable"}
                             </button>
-                            <button
-                              onClick={() => deleteUser(u.email)}
-                              className="px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition text-rose-300"
-                            >
+                            <button onClick={() => deleteUser(u.email)} className="px-4 py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-medium transition">
                               Delete
                             </button>
                           </div>
@@ -304,88 +266,72 @@ export default function Admin() {
         )}
 
         {tab === "logs" && (
-          <section className="rounded-2xl bg-white/[0.03] border border-white/10 overflow-hidden">
-            <div className="p-5 flex flex-col gap-3">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <section className="rounded-3xl bg-white/[0.03] border border-white/10 overflow-hidden">
+            <div className="p-6 border-b border-white/5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
-                  <h2 className="text-xl font-bold">User activity logs</h2>
-                  <p className="text-slate-500 text-sm mt-1">In-memory (session only)</p>
+                  <h2 className="text-xl font-bold">Activity Logs</h2>
+                  <p className="text-gray-500 text-sm mt-1">In-memory (session only)</p>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={exportLogs}
-                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition"
-                  >
+                  <button onClick={exportLogs} className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition">
                     Export
                   </button>
-                  <button
-                    onClick={clearLogs}
-                    className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition text-rose-300"
-                  >
+                  <button onClick={clearLogs} className="px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-sm font-medium transition">
                     Clear
                   </button>
                 </div>
               </div>
-
               <div className="flex flex-col md:flex-row gap-3">
                 <select
                   value={logType}
                   onChange={(e) => setLogType(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200"
+                  className="px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                 >
                   {[
                     ["all", "All types"],
-                    ["register", "register"],
-                    ["login_email", "login_email"],
-                    ["login_face", "login_face"],
-                    ["detect", "detect"],
-                    ["logout", "logout"],
-                    ["admin_user_update", "admin_user_update"],
-                    ["admin_user_delete", "admin_user_delete"],
-                    ["admin_clear_logs", "admin_clear_logs"],
+                    ["register", "Register"],
+                    ["login_email", "Login Email"],
+                    ["login_face", "Login Face"],
+                    ["detect", "Detect"],
+                    ["logout", "Logout"],
+                    ["admin_user_update", "Admin Update"],
+                    ["admin_user_delete", "Admin Delete"],
+                    ["admin_clear_logs", "Admin Clear Logs"],
                   ].map(([v, label]) => (
-                    <option key={v} value={v}>
-                      {label}
-                    </option>
+                    <option key={v} value={v}>{label}</option>
                   ))}
                 </select>
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search (email, type, meta...)"
-                  className="flex-1 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                  placeholder="Search logs..."
+                  className="flex-1 px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/50"
                 />
               </div>
             </div>
-
-            <div className="overflow-auto">
-              <table className="min-w-[900px] w-full text-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-[800px] w-full text-sm">
                 <thead className="bg-white/[0.03]">
                   <tr>
                     {["Time", "Type", "Email", "Meta"].map((h) => (
-                      <th key={h} className="text-left px-4 py-3 font-medium text-slate-300">
-                        {h}
-                      </th>
+                      <th key={h} className="text-left px-5 py-4 font-semibold text-gray-300">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/10">
+                <tbody className="divide-y divide-white/5">
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td className="px-4 py-6 text-slate-500" colSpan={4}>
-                        No logs.
-                      </td>
+                      <td className="px-5 py-8 text-gray-500" colSpan={4}>No logs found.</td>
                     </tr>
                   ) : (
-                    filteredLogs.map((l) => (
-                      <tr key={l.id}>
-                        <td className="px-4 py-3 text-slate-500">{formatDateTime(l.ts)}</td>
-                        <td className="px-4 py-3 text-slate-200">{l.type}</td>
-                        <td className="px-4 py-3 text-slate-200">{l.email || "—"}</td>
-                        <td className="px-4 py-3 text-slate-500">
-                          <pre className="text-xs whitespace-pre-wrap break-words">
-                            {JSON.stringify(l.meta || {}, null, 2)}
-                          </pre>
+                    filteredLogs.map((l, i) => (
+                      <tr key={i} className="hover:bg-white/[0.02] transition">
+                        <td className="px-5 py-4 text-gray-500 whitespace-nowrap">{formatDateTime(l.ts)}</td>
+                        <td className="px-5 py-4 text-white">{l.type}</td>
+                        <td className="px-5 py-4 text-gray-300">{l.email || "—"}</td>
+                        <td className="px-5 py-4 text-gray-500">
+                          <pre className="text-xs whitespace-pre-wrap break-all max-w-xs">{JSON.stringify(l.meta || {}, null, 2)}</pre>
                         </td>
                       </tr>
                     ))

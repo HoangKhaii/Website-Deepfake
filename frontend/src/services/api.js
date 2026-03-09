@@ -1,10 +1,21 @@
 const API_BASE = "http://localhost:5000/api";
 
 async function request(url, options = {}) {
-  const res = await fetch(url, options);
+  let res;
+  try {
+    res = await fetch(url, options);
+  } catch (networkError) {
+    if (networkError.message === "Failed to fetch") {
+      throw new Error("Không thể kết nối đến máy chủ. Vui lòng đảm bảo backend server đang chạy trên port 5000.");
+    }
+    throw new Error(`Lỗi mạng: ${networkError.message}`);
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || data.error || res.statusText || `Request failed: ${res.status}`);
+    if (data.message?.includes("PostgreSQL") || data.message?.includes("Database") || data.message?.includes("cơ sở dữ liệu")) {
+      throw new Error("Lỗi Database: " + data.message);
+    }
+    throw new Error(data.message || data.error || res.statusText || `Yêu cầu thất bại: ${res.status}`);
   }
   return data;
 }

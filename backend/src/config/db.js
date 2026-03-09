@@ -80,7 +80,7 @@ async function getPool() {
 async function query(text, params) {
   const p = await getPool();
   if (!p) {
-    const err = new Error('PostgreSQL is not configured/connected');
+    const err = new Error('Database error: PostgreSQL chưa được cấu hình. Vui lòng cấu hình biến môi trường DATABASE_URL hoặc PGHOST, PGDATABASE, PGUSER, PGPASSWORD trong file .env');
     err.code = 'DB_NOT_READY';
     throw err;
   }
