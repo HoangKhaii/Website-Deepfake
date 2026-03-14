@@ -29,41 +29,53 @@ export default function Otp() {
         showError(err.message || "Failed to send OTP");
       });
     }
-  }, [type, pendingLogin?.email]);
+  }, [type, pendingLogin?.email, showError]);
 
-  const verify = async () => {
+  const verify = async (selectedCode) => {
+    // Đăng ký vẫn dùng flow cũ
     if (type === "register") {
       nav("/face-scan?type=register");
       return;
     }
-    if (type === "login-email" && pendingLogin?.email && otpCode.trim()) {
-      setError("");
-      setLoading(true);
-      try {
-        const res = await otpVerify(pendingLogin.email, otpCode.trim());
-        setUser(res.user);
-        setToken(res.token);
-        setPendingLogin(null);
-        success("OTP verified successfully! Welcome back.");
-        nav("/");
-      } catch (err) {
-        const errorMsg = err.message || "Invalid OTP";
-        setError(errorMsg);
-        showError(errorMsg);
-      } finally {
-        setLoading(false);
-      }
+
+    const codeToVerify =
+      type === "login-mfa" ? selectedCode : otpCode.trim();
+
+    if (!codeToVerify || !pendingLogin?.email) {
+      return;
+    }
+
+    setError("");
+    setLoading(true);
+    try {
+      const res = await otpVerify(pendingLogin.email, codeToVerify);
+      setUser(res.user);
+      setToken(res.token);
+      setPendingLogin(null);
+      success("Verification successful! Welcome back.");
+      nav("/");
+    } catch (err) {
+      const errorMsg = err.message || "Invalid OTP";
+      setError(errorMsg);
+      showError(errorMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
-    
-    const newOtp = otpCode.padEnd(index + 1, " ").split("");
-    newOtp[index] = value[index] || "";
+
+    // Chuẩn hóa độ dài chuỗi OTP thành 6 ký tự
+    const newOtp = otpCode.split("");
+    while (newOtp.length < 6) newOtp.push("");
+
+    // Mỗi ô input chỉ chứa 1 ký tự, nên lấy trực tiếp value
+    newOtp[index] = value || "";
     const finalOtp = newOtp.join("").trim();
     setOtpCode(finalOtp);
 
+    // Tự động chuyển sang ô tiếp theo khi đã nhập 1 số
     if (value && index < 5) {
       document.getElementById(`otp-${index + 1}`)?.focus();
     }
@@ -131,8 +143,14 @@ export default function Otp() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h1 className="text-3xl font-bold mb-2 text-slate-800">Verify OTP</h1>
-              <p className="text-slate-600">Enter the one-time password we sent to your email</p>
+              <h1 className="text-3xl font-bold mb-2 text-slate-800">
+                {type === "login-mfa" ? "Verify Your Device" : "Verify OTP"}
+              </h1>
+              <p className="text-slate-600">
+                {type === "login-mfa"
+                  ? "Select the code that matches one of the codes in your email."
+                  : "Enter the one-time password we sent to your email"}
+              </p>
             </div>
 
             {type === "login-email" && (
@@ -159,51 +177,75 @@ export default function Otp() {
               </p>
             </div>
 
-            {/* OTP Input */}
-            <div className="mb-6 flex justify-center gap-2">
-              {[0, 1, 2, 3, 4, 5].map((index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={otpCode[index] || ""}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onFocus={() => setFocusedIndex(index)}
-                  className={`w-12 h-14 rounded-xl text-center text-2xl font-bold transition-all ${
-                    focusedIndex === index
-                      ? 'bg-green-50 border-2 border-green-500 text-green-700 shadow-lg shadow-green-500/20'
-                      : 'bg-slate-100 border border-slate-200 text-slate-800'
-                  } focus:outline-none`}
-                  placeholder="-"
-                />
-              ))}
-            </div>
+            {type === "login-mfa" && pendingLogin?.mfa?.codes ? (
+              <>
+                {/* MFA lựa chọn 3 mã */}
+                <div className="mb-6 space-y-3">
+                  {pendingLogin.mfa.codes.map((code, idx) => (
+                    <button
+                      key={code}
+                      type="button"
+                      onClick={() => verify(code)}
+                      disabled={loading}
+                      className="w-full py-3 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-green-50 text-lg font-semibold tracking-[0.3em] text-slate-800 flex items-center justify-center gap-3 transition-all disabled:opacity-50"
+                    >
+                      <span className="px-3 py-1 rounded-full bg-slate-100 text-xs font-medium text-slate-500">
+                        Option {String.fromCharCode(65 + idx)}
+                      </span>
+                      <span>{code}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
+                {/* OTP Input 6 số (flow cũ) */}
+                <div className="mb-6 flex justify-center gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={otpCode[index] || ""}
+                      onChange={(e) => handleOtpChange(index, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(index, e)}
+                      onFocus={() => setFocusedIndex(index)}
+                      className={`w-12 h-14 rounded-xl text-center text-2xl font-bold transition-all ${
+                        focusedIndex === index
+                          ? 'bg-green-50 border-2 border-green-500 text-green-700 shadow-lg shadow-green-500/20'
+                          : 'bg-slate-100 border border-slate-200 text-slate-800'
+                      } focus:outline-none`}
+                      placeholder="-"
+                    />
+                  ))}
+                </div>
 
-            <button
-              onClick={verify}
-              disabled={loading || otpCode.length !== 6}
-              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
-            >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Verifying...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
-                  Verify OTP
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-              )}
-            </button>
+                <button
+                  onClick={() => verify()}
+                  disabled={loading || otpCode.length !== 6}
+                  className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      Verify OTP
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+              </>
+            )}
 
             {time === 0 && (
               <button 
