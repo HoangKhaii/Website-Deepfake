@@ -80,6 +80,12 @@ export default function Register() {
     if (birthDate > today) {
       return "Date of birth cannot be in the future";
     }
+    // Validate age - must be at least 12 years old
+    const minAgeDate = new Date();
+    minAgeDate.setFullYear(minAgeDate.getFullYear() - 12);
+    if (birthDate > minAgeDate) {
+      return "You must be at least 12 years old to register";
+    }
     return "";
   };
 

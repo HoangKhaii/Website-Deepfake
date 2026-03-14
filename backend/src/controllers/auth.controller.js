@@ -108,7 +108,7 @@ async function register(req, res) {
       }
     }
     
-    // Validate birth_date - không được chạy trước ngày hiện tại
+    // Validate birth_date - không được chạy trước ngày hiện tại và phải >= 12 tuổi
     if (birth_date) {
       const birthDate = new Date(birth_date);
       const today = new Date();
@@ -116,6 +116,13 @@ async function register(req, res) {
       
       if (birthDate > today) {
         return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+      }
+      
+      // Phải ít nhất 12 tuổi
+      const minAgeDate = new Date();
+      minAgeDate.setFullYear(minAgeDate.getFullYear() - 12);
+      if (birthDate > minAgeDate) {
+        return res.status(400).json({ message: 'You must be at least 12 years old to register' });
       }
     }
     
@@ -381,7 +388,7 @@ async function registerOtpSend(req, res) {
       }
     }
     
-    // Validate birth_date - không được chạy trước ngày hiện tại
+    // Validate birth_date - không được chạy trước ngày hiện tại và phải >= 12 tuổi
     if (birth_date) {
       const birthDate = new Date(birth_date);
       const today = new Date();
@@ -389,6 +396,13 @@ async function registerOtpSend(req, res) {
       
       if (birthDate > today) {
         return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+      }
+      
+      // Phải ít nhất 12 tuổi
+      const minAgeDate = new Date();
+      minAgeDate.setFullYear(minAgeDate.getFullYear() - 12);
+      if (birthDate > minAgeDate) {
+        return res.status(400).json({ message: 'You must be at least 12 years old to register' });
       }
     }
     
@@ -399,12 +413,53 @@ async function registerOtpSend(req, res) {
     
     // Kiểm tra email đã tồn tại chưa
     const existingEmail = await query(
-      `SELECT user_id FROM users WHERE email = $1 LIMIT 1`,
+      `SELECT user_id, status FROM users WHERE email = $1 LIMIT 1`,
       [String(email).trim().toLowerCase()]
     );
     
-    if (existingEmail.rows.length > 0) {
+    // Nếu email đã tồn tại và đã active (không phải pending), báo lỗi
+    if (existingEmail.rows.length > 0 && existingEmail.rows[0].status !== 'pending') {
       return res.status(409).json({ message: 'Email already registered' });
+    }
+    
+    // Nếu email đã tồn tại với status = 'pending', kiểm tra đã gửi OTP gần đây chưa
+    if (existingEmail.rows.length > 0 && existingEmail.rows[0].status === 'pending') {
+      const recentOtp = await query(
+        `SELECT created_at FROM otp WHERE user_id = $1 AND purpose = 'register' ORDER BY created_at DESC LIMIT 1`,
+        [existingEmail.rows[0].user_id]
+      );
+      
+      if (recentOtp.rows.length > 0) {
+        const lastOtpTime = new Date(recentOtp.rows[0].created_at);
+        const timeSinceLastOtp = (Date.now() - lastOtpTime.getTime()) / 1000;
+        if (timeSinceLastOtp < 60) {
+          return res.status(429).json({ 
+            message: 'Please wait before requesting another OTP',
+            retryAfter: Math.ceil(60 - timeSinceLastOtp)
+          });
+        }
+      }
+      
+      // Tạo mã OTP mới
+      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+      const expiredAt = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000);
+      
+      // Cập nhật OTP mới
+      await query(
+        `INSERT INTO otp (user_id, otp_code, expired_at, purpose) VALUES ($1, $2, $3, 'register')`,
+        [existingEmail.rows[0].user_id, otpCode, expiredAt]
+      );
+      
+      // Gửi email OTP
+      const emailResult = await sendOtpEmail(email, otpCode);
+      console.log(`[Register OTP Resend] ${email} => ${otpCode} (expires ${expiredAt.toISOString()})`);
+      
+      return res.json({ 
+        ok: true, 
+        message: 'OTP sent to your email',
+        email: email,
+        userId: existingEmail.rows[0].user_id
+      });
     }
     
     // Kiểm tra số điện thoại đã tồn tại chưa (nếu có nhập)
