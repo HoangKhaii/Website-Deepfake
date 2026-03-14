@@ -73,6 +73,13 @@ export default function Register() {
     if (!dodate) {
       return "Please select date of birth";
     }
+    // Validate birth date - cannot be in the future
+    const birthDate = new Date(dodate);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (birthDate > today) {
+      return "Date of birth cannot be in the future";
+    }
     return "";
   };
 
@@ -92,6 +99,7 @@ export default function Register() {
         password,
         phone_number: phone || null,
         full_name: name || null,
+        birth_date: dodate || null,
       });
       setShowOtpForm(true);
       setCountdown(60);
@@ -151,6 +159,7 @@ export default function Register() {
         password,
         phone_number: phone || null,
         full_name: name || null,
+        birth_date: dodate || null,
       });
       setCountdown(60);
       setResendDisabled(true);
@@ -494,6 +503,7 @@ export default function Register() {
                       type="date"
                       value={dodate}
                       onChange={(e) => setDodate(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
                       className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
                     />
                   </div>
