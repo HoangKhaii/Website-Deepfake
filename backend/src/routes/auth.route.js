@@ -1,6 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const { register, login, otpSend, otpVerify, getMe, registerOtpSend, registerOtpVerify, registerFace, verifyFace } = require('../controllers/auth.controller');
+const { register, login, otpSend, otpVerify, getMe, registerOtpSend, registerOtpVerify, registerFace, verifyFace, forgotPasswordEmail, forgotPasswordPhone, forgotPasswordVerify } = require('../controllers/auth.controller');
 const { authJWT } = require('../middlewares/auth.middleware');
 const rateLimit = require('express-rate-limit');
 const { generateTokenForUser, isGoogleAuthConfigured } = require('../config/passport-google');
@@ -63,6 +63,11 @@ router.get('/google/callback',
     }
   }
 );
+
+// Forgot password routes
+router.post('/forgot-password/email', otpLimiter, forgotPasswordEmail);
+router.post('/forgot-password/phone', otpLimiter, forgotPasswordPhone);
+router.post('/forgot-password/verify', forgotPasswordVerify);
 
 module.exports = router;
 

@@ -12,7 +12,7 @@ const ERROR_MESSAGES = {
 export default function Login() {
   const nav = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setUser, setToken } = useSession();
+  const { setUser, setToken, setPendingLogin } = useSession();
   const { success, error: showError } = useNotification();
   const [mode, setMode] = useState(null);
   const [email, setEmail] = useState("");
@@ -39,8 +39,23 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await apiLogin(email, password);
-      setUser(res.user);
-      setToken(res.token);
+      
+      // Nếu cần xác thực 2 bước (thiết bị mới)
+      if (res.requiresVerification) {
+        // Lưu email vào pendingLogin để OTP page sử dụng
+        setPendingLogin({ email });
+        // Chuyển đến trang OTP
+        nav("/otp?type=login-email");
+        return;
+      }
+      
+      // Đăng nhập bình thường
+      if (res.token) {
+        setToken(res.token);
+      }
+      if (res.user) {
+        setUser(res.user);
+      }
       success("Login successful! Welcome back.");
       if (res.user?.role === "admin") nav("/admin");
       else nav("/");
@@ -230,11 +245,16 @@ export default function Login() {
                     </span>
                   )}
                 </button>
+
+                <div className="text-center mt-4">
+                  <Link to="/forgot-password" className="text-green-600 hover:text-green-700 text-sm font-medium transition hover:underline">
+                    Forgot password?
+                  </Link>
+                </div>
               </>
             )}
 
-            {mode === "face" && (
-              <div className="text-center py-6 relative">
+            <div className="text-center py-6 relative">
                 <div className="relative inline-block mb-6">
                   <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center animate-pulse">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-600/30">
@@ -264,7 +284,6 @@ export default function Login() {
                   </span>
                 </button>
               </div>
-            )}
 
             {/* Google Login Button */}
             <div className="mt-6">

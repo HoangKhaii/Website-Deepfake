@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 const { JWT_SECRET } = require('../middlewares/auth.middleware');
 const { sendOtpEmail, sendLoginAlertEmail } = require('../services/email.service');
+const { sendOtpSms } = require('../services/sms.service');
 
 const BCRYPT_ROUNDS = 10;
 const OTP_EXPIRE_MINUTES = 10;
@@ -696,6 +697,304 @@ async function verifyFace(req, res) {
   }
 }
 
+// ========================
+// QUÊN MẬT KHẨU
+// ========================
+
+// Gửi OTP qua email cho quên mật khẩu
+async function forgotPasswordEmail(req, res) {
+  try {
+    const { email } = req.body || {};
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Validate email format
+    if (!email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Email must be @gmail.com' });
+    }
+
+    // Kiểm tra email có tồn tại không
+    const user = await query(
+      `SELECT user_id, email FROM users WHERE email = $1 LIMIT 1`,
+      [String(email).trim().toLowerCase()]
+    );
+
+    // Không tiết lộ email có tồn tại hay không (security best practice)
+    // Vẫn trả về thành công để tránh user enumeration
+    
+    if (user.rows.length > 0) {
+      // Kiểm tra đã gửi OTP gần đây chưa
+      const recentOtp = await query(
+        `SELECT created_at FROM otp WHERE user_id = $1 AND purpose = 'forgot_password_email' ORDER BY created_at DESC LIMIT 1`,
+        [user.rows[0].user_id]
+      );
+
+      if (recentOtp.rows.length > 0) {
+        const lastOtpTime = new Date(recentOtp.rows[0].created_at);
+        const timeSinceLastOtp = (Date.now() - lastOtpTime.getTime()) / 1000;
+        if (timeSinceLastOtp < 60) {
+          return res.status(429).json({ 
+            message: 'Please wait before requesting another OTP',
+            retryAfter: Math.ceil(60 - timeSinceLastOtp)
+          });
+        }
+      }
+
+      // Tạo mã OTP
+      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+      const expiredAt = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000);
+
+      // Lưu OTP
+      await query(
+        `INSERT INTO otp (user_id, otp_code, expired_at, purpose) VALUES ($1, $2, $3, 'forgot_password_email')`,
+        [user.rows[0].user_id, otpCode, expiredAt]
+      );
+
+      // Gửi email OTP
+      const emailResult = await sendOtpEmail(user.rows[0].email, otpCode);
+      console.log(`[Forgot Password Email] ${user.rows[0].email} => ${otpCode}`);
+    }
+
+    // Luôn trả về thành công (không tiết lộ email tồn tại)
+    return res.json({ 
+      ok: true, 
+      message: 'If this email exists, an OTP will be sent',
+      method: 'email'
+    });
+  } catch (err) {
+    console.error('Forgot password email error:', err);
+    return res.status(500).json({ message: err?.message || 'Failed to process request' });
+  }
+}
+
+// Gửi OTP qua SMS cho quên mật khẩu
+async function forgotPasswordPhone(req, res) {
+  try {
+    const { phone } = req.body || {};
+
+    if (!phone) {
+      return res.status(400).json({ message: 'Phone number is required' });
+    }
+
+    // Validate phone
+    if (!/^\d{10}$/.test(phone)) {
+      return res.status(400).json({ message: 'Phone must be exactly 10 digits' });
+    }
+
+    // Kiểm tra phone có tồn tại không
+    const user = await query(
+      `SELECT user_id, phone_number FROM users WHERE phone_number = $1 LIMIT 1`,
+      [phone]
+    );
+
+    // Không tiết lộ phone có tồn tại hay không
+    if (user.rows.length > 0) {
+      // Kiểm tra đã gửi OTP gần đây chưa
+      const recentOtp = await query(
+        `SELECT created_at FROM otp WHERE user_id = $1 AND purpose = 'forgot_password_phone' ORDER BY created_at DESC LIMIT 1`,
+        [user.rows[0].user_id]
+      );
+
+      if (recentOtp.rows.length > 0) {
+        const lastOtpTime = new Date(recentOtp.rows[0].created_at);
+        const timeSinceLastOtp = (Date.now() - lastOtpTime.getTime()) / 1000;
+        if (timeSinceLastOtp < 60) {
+          return res.status(429).json({ 
+            message: 'Please wait before requesting another OTP',
+            retryAfter: Math.ceil(60 - timeSinceLastOtp)
+          });
+        }
+      }
+
+      // Tạo mã OTP
+      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+      const expiredAt = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000);
+
+      // Lưu OTP
+      await query(
+        `INSERT INTO otp (user_id, otp_code, expired_at, purpose) VALUES ($1, $2, $3, 'forgot_password_phone')`,
+        [user.rows[0].user_id, otpCode, expiredAt]
+      );
+
+      // Gửi SMS OTP
+      const smsResult = await sendOtpSms(user.rows[0].phone_number, otpCode);
+      console.log(`[Forgot Password Phone] ${user.rows[0].phone_number} => ${otpCode}`);
+    }
+
+    // Luôn trả về thành công
+    return res.json({ 
+      ok: true, 
+      message: 'If this phone number exists, an OTP will be sent',
+      method: 'phone'
+    });
+  } catch (err) {
+    console.error('Forgot password phone error:', err);
+    return res.status(500).json({ message: err?.message || 'Failed to process request' });
+  }
+}
+
+// Xác minh OTP và đổi mật khẩu
+async function forgotPasswordVerify(req, res) {
+  try {
+    const { identifier, otp, newPassword, method } = req.body || {};
+
+    if (!identifier || !otp) {
+      return res.status(400).json({ message: 'Identifier and OTP are required' });
+    }
+
+    // Nếu không có newPassword thì chỉ verify OTP (bước trung gian)
+    if (!newPassword) {
+      // Tìm user dựa trên email hoặc phone
+      let user;
+      if (method === 'email') {
+        if (!identifier.endsWith('@gmail.com')) {
+          return res.status(400).json({ message: 'Email must be @gmail.com' });
+        }
+        const result = await query(
+          `SELECT user_id FROM users WHERE email = $1 LIMIT 1`,
+          [String(identifier).trim().toLowerCase()]
+        );
+        if (result.rows.length === 0) {
+          return res.status(400).json({ message: 'Invalid OTP or identifier' });
+        }
+        user = result.rows[0];
+      } else {
+        if (!/^\d{10}$/.test(identifier)) {
+          return res.status(400).json({ message: 'Phone must be exactly 10 digits' });
+        }
+        const result = await query(
+          `SELECT user_id FROM users WHERE phone_number = $1 LIMIT 1`,
+          [identifier]
+        );
+        if (result.rows.length === 0) {
+          return res.status(400).json({ message: 'Invalid OTP or identifier' });
+        }
+        user = result.rows[0];
+      }
+
+      // Kiểm tra OTP
+      const purpose = method === 'email' ? 'forgot_password_email' : 'forgot_password_phone';
+      const otpRecord = await query(
+        `SELECT otp_id, otp_code, expired_at FROM otp 
+         WHERE user_id = $1 AND purpose = $2 AND otp_code = $3 
+         ORDER BY created_at DESC LIMIT 1`,
+        [user.user_id, purpose, otp]
+      );
+
+      if (otpRecord.rows.length === 0) {
+        return res.status(400).json({ message: 'Invalid OTP' });
+      }
+
+      // Kiểm tra OTP hết hạn chưa
+      if (new Date(otpRecord.rows[0].expired_at) < new Date()) {
+        return res.status(400).json({ message: 'OTP has expired' });
+      }
+
+      // OTP hợp lệ, trả về thành công
+      return res.json({ 
+        ok: true, 
+        message: 'OTP verified successfully. Please enter your new password.' 
+      });
+    }
+
+    // Nếu có newPassword thì verify OTP + đổi mật khẩu (flow cũ)
+
+    if (!method || !['email', 'phone'].includes(method)) {
+      return res.status(400).json({ message: 'Method must be email or phone' });
+    }
+
+    // Validate password
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+    }
+    if (!/\d/.test(newPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one number' });
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(newPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one special character' });
+    }
+
+    // Tìm user dựa trên email hoặc phone
+    let user;
+    if (method === 'email') {
+      if (!identifier.endsWith('@gmail.com')) {
+        return res.status(400).json({ message: 'Email must be @gmail.com' });
+      }
+      const result = await query(
+        `SELECT user_id FROM users WHERE email = $1 LIMIT 1`,
+        [String(identifier).trim().toLowerCase()]
+      );
+      if (result.rows.length === 0) {
+        return res.status(400).json({ message: 'Invalid OTP or identifier' });
+      }
+      user = result.rows[0];
+    } else {
+      if (!/^\d{10}$/.test(identifier)) {
+        return res.status(400).json({ message: 'Phone must be exactly 10 digits' });
+      }
+      const result = await query(
+        `SELECT user_id FROM users WHERE phone_number = $1 LIMIT 1`,
+        [identifier]
+      );
+      if (result.rows.length === 0) {
+        return res.status(400).json({ message: 'Invalid OTP or identifier' });
+      }
+      user = result.rows[0];
+    }
+
+    // Kiểm tra OTP
+    const purpose = method === 'email' ? 'forgot_password_email' : 'forgot_password_phone';
+    const otpRecord = await query(
+      `SELECT otp_id, otp_code, expired_at FROM otp 
+       WHERE user_id = $1 AND purpose = $2 AND otp_code = $3 
+       ORDER BY created_at DESC LIMIT 1`,
+      [user.user_id, purpose, otp]
+    );
+
+    if (otpRecord.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid OTP' });
+    }
+
+    // Kiểm tra OTP hết hạn chưa
+    if (new Date(otpRecord.rows[0].expired_at) < new Date()) {
+      return res.status(400).json({ message: 'OTP has expired' });
+    }
+
+    // Hash password mới
+    const hash = await bcrypt.hash(String(newPassword), BCRYPT_ROUNDS);
+
+    // Cập nhật password
+    await query(
+      `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE user_id = $2`,
+      [hash, user.user_id]
+    );
+
+    // Xóa các OTP cũ
+    await query(
+      `DELETE FROM otp WHERE user_id = $1 AND purpose = $2`,
+      [user.user_id, purpose]
+    );
+
+    console.log(`[Forgot Password] User ${user.user_id} reset password successfully`);
+
+    return res.json({ 
+      ok: true, 
+      message: 'Password reset successfully' 
+    });
+  } catch (err) {
+    console.error('Forgot password verify error:', err);
+    return res.status(500).json({ message: err?.message || 'Failed to reset password' });
+  }
+}
+
 module.exports = {
   register,
   login,
@@ -706,4 +1005,7 @@ module.exports = {
   registerOtpVerify,
   registerFace,
   verifyFace,
+  forgotPasswordEmail,
+  forgotPasswordPhone,
+  forgotPasswordVerify,
 };

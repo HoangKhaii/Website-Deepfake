@@ -103,3 +103,29 @@ export const verifyFace = async (email, faceImage) => {
     body: JSON.stringify({ email, faceImage }),
   });
 };
+
+// Forgot Password
+export const forgotPasswordEmail = async (email) => {
+  return request(`${API_BASE}/auth/forgot-password/email`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+};
+
+export const forgotPasswordPhone = async (phone) => {
+  return request(`${API_BASE}/auth/forgot-password/phone`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ phone }),
+  });
+};
+
+
+export const forgotPasswordVerify = async (identifier, otp, newPassword, method) => {
+  return request(`${API_BASE}/auth/forgot-password/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ identifier, otp, newPassword, method }),
+  });
+};
