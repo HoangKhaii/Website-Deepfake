@@ -39,19 +39,13 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await apiLogin(email, password);
-
+      
       // Nếu cần xác thực 2 bước (thiết bị mới)
       if (res.requiresVerification) {
-        // Lưu email và thông tin MFA để trang OTP/MFA sử dụng
-        setPendingLogin({ email, mfa: res.mfa || null });
-
-        // Nếu backend trả về kiểu MFA lựa chọn mã, chuyển sang màn chọn mã
-        if (res?.mfa?.type === "email-mfa-choices") {
-          nav("/otp?type=login-mfa");
-        } else {
-          // Fallback: dùng flow OTP cũ
-          nav("/otp?type=login-email");
-        }
+        // Lưu email vào pendingLogin để OTP page sử dụng
+        setPendingLogin({ email });
+        // Chuyển đến trang OTP
+        nav("/otp?type=login-email");
         return;
       }
       

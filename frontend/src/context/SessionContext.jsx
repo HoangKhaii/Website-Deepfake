@@ -5,7 +5,7 @@ const SessionContext = createContext(null);
 export function SessionProvider({ children }) {
   const [user, setUserState] = useState(null);
   const [token, setTokenState] = useState(null);
-  const [pendingLogin, setPendingLoginState] = useState(null); // { email, mfaCodes? }
+  const [pendingLogin, setPendingLoginState] = useState(null);
   const [pendingRegister, setPendingRegisterState] = useState(null);
   const [faceUsers, setFaceUsersState] = useState({});
 

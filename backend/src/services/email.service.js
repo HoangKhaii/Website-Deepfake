@@ -113,75 +113,6 @@ async function sendOtpEmail(email, otpCode) {
   return sendEmail({ to: email, subject, html });
 }
 
-// Gửi email MFA với nhiều mã (1 mã đúng, 2 mã nhiễu)
-async function sendMfaEmail(email, codes) {
-  const subject = 'DeepCheck - Xác thực đăng nhập từ thiết bị mới';
-  const [code1, code2, code3] = codes;
-
-  const html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background-color: #f4f4f4;">
-      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px;">
-        <tr>
-          <td align="center">
-            <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 520px; background-color: #ffffff; border-radius: 12px; overflow: hidden;">
-              <tr>
-                <td style="background: linear-gradient(135deg, #2563eb, #10b981); padding: 30px; text-align: center;">
-                  <h1 style="color: #ffffff; margin: 0; font-size: 26px;">Xác thực thiết bị mới</h1>
-                  <p style="color: #e5e7eb; margin: 8px 0 0; font-size: 14px;">
-                    Chúng tôi phát hiện đăng nhập từ một thiết bị lạ. Vui lòng chọn đúng mã bên dưới.
-                  </p>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding: 30px 28px 32px;">
-                  <p style="color: #4b5563; margin: 0 0 18px 0; font-size: 15px;">
-                    Trên màn hình đăng nhập, bạn sẽ thấy <strong>3 lựa chọn mã</strong>. Vui lòng chọn mã trùng với <strong>một trong các mã</strong> dưới đây:
-                  </p>
-                  <table width="100%" cellpadding="0" cellspacing="0" style="margin: 10px 0 20px 0;">
-                    <tr>
-                      <td align="center" style="padding: 6px;">
-                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 24px; display: inline-block;">
-                          <span style="font-size: 24px; font-weight: 700; color: #111827; letter-spacing: 4px;">${code1}</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" style="padding: 6px;">
-                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 24px; display: inline-block;">
-                          <span style="font-size: 24px; font-weight: 700; color: #111827; letter-spacing: 4px;">${code2}</span>
-                        </div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td align="center" style="padding: 6px;">
-                        <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 14px 24px; display: inline-block;">
-                          <span style="font-size: 24px; font-weight: 700; color: #111827; letter-spacing: 4px;">${code3}</span>
-                        </div>
-                      </td>
-                    </tr>
-                  </table>
-                  <p style="color: #6b7280; margin: 0; font-size: 13px; text-align: center;">
-                    Mã chỉ có hiệu lực trong <strong>10 phút</strong>. Nếu đây không phải bạn, vui lòng đổi mật khẩu ngay lập tức.
-                  </p>
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
-      </table>
-    </body>
-    </html>
-  `;
-
-  return sendEmail({ to: email, subject, html });
-}
-
 // Gửi email cảnh báo đăng nhập từ thiết bị mới
 async function sendLoginAlertEmail(email, deviceInfo, location) {
   const subject = 'DeepCheck - Cảnh báo đăng nhập từ thiết bị mới';
@@ -260,7 +191,6 @@ async function sendLoginAlertEmail(email, deviceInfo, location) {
 module.exports = {
   sendEmail,
   sendOtpEmail,
-  sendMfaEmail,
   sendLoginAlertEmail,
   transporter,
 };

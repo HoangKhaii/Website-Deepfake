@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { query } = require('../config/db');
 const { JWT_SECRET } = require('../middlewares/auth.middleware');
-const { sendOtpEmail, sendLoginAlertEmail, sendMfaEmail } = require('../services/email.service');
+const { sendOtpEmail, sendLoginAlertEmail } = require('../services/email.service');
 const { sendOtpSms } = require('../services/sms.service');
 
 const BCRYPT_ROUNDS = 10;
@@ -215,47 +215,31 @@ async function login(req, res) {
       [user.user_id]
     );
     
-    // Nếu là thiết bị chưa trusted, yêu cầu OTP/MFA
+    // Nếu là thiết bị chưa trusted, yêu cầu OTP
     if (!isTrusted) {
-      // Tạo 1 mã thật và 2 mã nhiễu (MFA 3 lựa chọn)
-      const realCode = String(Math.floor(100000 + Math.random() * 900000));
-      let fake1, fake2;
-      do {
-        fake1 = String(Math.floor(100000 + Math.random() * 900000));
-      } while (fake1 === realCode);
-      do {
-        fake2 = String(Math.floor(100000 + Math.random() * 900000));
-      } while (fake2 === realCode || fake2 === fake1);
-
+      // Gửi OTP
+      const otpCode = String(Math.floor(100000 + Math.random() * 900000));
       const expiredAt = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000);
-
-      // Lưu chỉ mã thật vào DB, các mã còn lại là nhiễu
+      
       await query(
         `INSERT INTO otp (user_id, otp_code, expired_at) VALUES ($1, $2, $3)`,
-        [user.user_id, realCode, expiredAt]
+        [user.user_id, otpCode, expiredAt]
       );
-
-      // Trộn ngẫu nhiên thứ tự hiển thị cho email/frontend
-      const codes = [realCode, fake1, fake2].sort(() => Math.random() - 0.5);
       
-      // Gửi email MFA với 3 mã
-      await sendMfaEmail(user.email, codes);
-      console.log(`[Login MFA] ${user.email} => real ${realCode}, options ${codes.join(', ')} (expires ${expiredAt.toISOString()})`);
+      // Gửi email OTP
+      const emailResult = await sendOtpEmail(user.email, otpCode);
+      console.log(`[Login OTP] ${user.email} => ${otpCode} (expires ${expiredAt.toISOString()})`);
       
       // Gửi thông báo đăng nhập từ thiết bị mới
       const deviceInfo = parseUserAgent(userAgent);
       await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp }, 'Unknown location');
       
-      // Trả về yêu cầu xác thực 2 bước cùng danh sách mã để frontend hiển thị
+      // Trả về yêu cầu xác thực 2 bước
       return res.json({
         requiresVerification: true,
-        message: 'Please verify your identity. Choose the correct code we sent to your email.',
+        message: 'Please verify your identity. OTP sent to your email.',
         email: user.email,
-        user: toSafeUser(user),
-        mfa: {
-          type: 'email-mfa-choices',
-          codes,
-        },
+        user: toSafeUser(user)
       });
     }
     
