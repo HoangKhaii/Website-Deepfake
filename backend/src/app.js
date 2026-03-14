@@ -3,13 +3,45 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
+const passport = require('passport');
 
 const authRoutes = require('./routes/auth.route');
 const detectRoutes = require('./routes/detect.route');
 const dbToolsRoutes = require('./routes/db-tools.route');
 const { notFound, errorHandler } = require('./middlewares/error.middleware');
+const { initializeGoogleAuth } = require('./config/passport-google');
 
 const app = express();
+
+// Initialize Passport
+app.use(passport.initialize());
+initializeGoogleAuth(passport);
+
+// Rate limiting - Chống brute force
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 phút
+  max: 5, // 5 lần thử
+  message: { message: 'Too many login attempts. Please try again after 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const otpLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 giờ
+  max: 5, // 10 lần gửi OTP
+  message: { message: 'Too many OTP requests. Please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 phút
+  max: 100, // 100 requests/phút
+  message: { message: 'Too many requests. Please slow down.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Security headers với Helmet
 app.use(

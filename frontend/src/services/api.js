@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:5000/api";
+export const API_BASE = "http://localhost:5000/api";
 
 async function request(url, options = {}) {
   let res;
@@ -52,6 +52,22 @@ export const otpVerify = async (email, otp_code) => {
   });
 };
 
+export const registerOtpSend = async (body) => {
+  return request(`${API_BASE}/auth/register-otp/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+};
+
+export const registerOtpVerify = async (email, otp_code) => {
+  return request(`${API_BASE}/auth/register-otp/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, otp_code }),
+  });
+};
+
 export const getMe = async (token) => {
   return request(`${API_BASE}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -70,4 +86,20 @@ export const detectImage = async (imageFile, userId = null) => {
   formData.append("image", imageFile);
   if (userId != null) formData.append("user_id", String(userId));
   return request(`${API_BASE}/detect-image`, { method: "POST", body: formData });
+};
+
+export const registerFace = async (email, faceImage) => {
+  return request(`${API_BASE}/auth/register-face`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, faceImage }),
+  });
+};
+
+export const verifyFace = async (email, faceImage) => {
+  return request(`${API_BASE}/auth/verify-face`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, faceImage }),
+  });
 };

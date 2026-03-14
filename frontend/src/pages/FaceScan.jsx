@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
 import { useNotification } from "../components/Notification";
 import { appendLog, upsertUserByEmail } from "../services/storage";
+import { registerFace, verifyFace } from "../services/api";
+import SliderCaptcha from "../components/SliderCaptcha";
 
 export default function FaceScan() {
   const videoRef = useRef();
   const canvasRef = useRef();
+  const streamRef = useRef(null);
   const nav = useNavigate();
   const [params] = useSearchParams();
   const type = params.get("type");
@@ -15,14 +18,60 @@ export default function FaceScan() {
   const { success, error: showError, warning } = useNotification();
   const [scanning, setScanning] = useState(false);
   const [countdown, setCountdown] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [captchaVerified, setCaptchaVerified] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [cameraReady, setCameraReady] = useState(false);
 
+  // Start video
   useEffect(() => {
-    navigator.mediaDevices.getUserMedia({ video: true }).then(
-      (stream) => (videoRef.current.srcObject = stream)
-    );
+    async function startVideo() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            width: { ideal: 640 },
+            height: { ideal: 480 },
+            facingMode: "user"
+          } 
+        });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          setCameraReady(true);
+        }
+      } catch (err) {
+        console.error("Error accessing camera:", err);
+        showError("Cannot access camera. Please allow camera permission.");
+      }
+    }
+    startVideo();
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [showError]);
+
+  const captureFace = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current) return null;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0);
+
+    return canvas.toDataURL("image/jpeg", 0.9);
   }, []);
 
-  const scan = () => {
+  const scan = async () => {
+    if (scanning) return;
+
     setScanning(true);
     setCountdown(3);
 
@@ -36,35 +85,87 @@ export default function FaceScan() {
       });
     }, 1000);
 
-    setTimeout(() => {
+    setTimeout(async () => {
       clearInterval(countdownInterval);
       setCountdown(null);
       setScanning(false);
 
-      if (type === "register" && pendingRegister) {
-        setUser({ ...sessionUser, hasFace: true });
-        setPendingRegister(null);
-        setFaceRegistered(pendingRegister.email);
-        success("Face registered successfully! Welcome to DeepCheck.");
-        nav("/");
-      }
+      try {
+        // Capture face image
+        const faceImage = captureFace();
+        
+        if (!faceImage) {
+          showError("Failed to capture face. Please try again.");
+          return;
+        }
 
-      if (type === "login-face") {
-        if (!sessionUser?.email) {
-          warning("No face registered! Please register with face first.");
+        setProcessing(true);
+
+        // For registration flow: use sessionUser if logged in, otherwise use pendingRegister
+        const userEmail = sessionUser?.email || pendingRegister?.email;
+        
+        if (type === "register" && !userEmail) {
+          showError("Please register through the proper flow first.");
+          setProcessing(false);
           return;
         }
-        if (!sessionUser.hasFace && !isFaceRegistered(sessionUser.email)) {
-          warning("No face registered! Please register your face first.");
-          return;
+
+        if (type === "register" && userEmail) {
+          // Save face to backend
+          const response = await registerFace(userEmail, faceImage);
+
+          if (response.success) {
+            // Show CAPTCHA after successful face registration
+            setShowCaptcha(true);
+            setCaptchaVerified(false);
+          } else {
+            showError(response.message || "Failed to register face");
+            setProcessing(false);
+          }
         }
-        setUser({ ...sessionUser, hasFace: true });
-        upsertUserByEmail({ ...sessionUser, lastLoginAt: new Date().toISOString() });
-        appendLog({ type: "login_face", email: sessionUser.email });
-        success("Face verification successful! Welcome back.");
-        nav("/");
+
+        if (type === "login-face") {
+          if (!sessionUser?.email) {
+            warning("No face registered! Please register with face first.");
+            setProcessing(false);
+            return;
+          }
+          
+          // Verify face for login
+          const response = await verifyFace(sessionUser.email, faceImage);
+
+          if (response.success) {
+            setUser({ ...sessionUser, hasFace: true });
+            upsertUserByEmail({ ...sessionUser, lastLoginAt: new Date().toISOString() });
+            appendLog({ type: "login_face", email: sessionUser.email });
+            success("Face verification successful! Welcome back.");
+            nav("/");
+          } else {
+            showError(response.message || "Face verification failed");
+          }
+          setProcessing(false);
+        }
+      } catch (err) {
+        console.error("Error during scan:", err);
+        showError(err.message || "An error occurred. Please try again.");
+        setProcessing(false);
       }
     }, 3000);
+  };
+
+  const handleCaptchaSuccess = () => {
+    setCaptchaVerified(true);
+    setShowCaptcha(false);
+    
+    const userEmail = sessionUser?.email || pendingRegister?.email;
+    
+    if (type === "register" && userEmail) {
+      setUser({ ...sessionUser, hasFace: true });
+      if (pendingRegister) setPendingRegister(null);
+      setFaceRegistered(userEmail);
+      success("Face registered successfully! Welcome to DeepCheck.");
+      nav("/");
+    }
   };
 
   return (
@@ -74,8 +175,6 @@ export default function FaceScan() {
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.5%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
         <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/25 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
-        {/* Scanning line animation */}
-        <div className="absolute top-1/4 left-1/2 w-[1px] h-1/2 h-full bg-gradient-to-b from-transparent via-green-500/50 to-transparent animate-pulse"></div>
       </div>
 
       {/* Navigation */}
@@ -95,6 +194,24 @@ export default function FaceScan() {
           </div>
         </div>
       </nav>
+
+      {/* Verify Modal */}
+      {showCaptcha && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-2xl max-w-[420px] w-full mx-4 overflow-hidden">
+            <SliderCaptcha 
+              onSuccess={() => {
+                handleCaptchaSuccess();
+              }}
+              onClose={() => {
+                setShowCaptcha(false);
+                setCaptchaVerified(false);
+                setProcessing(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-6 py-8">
@@ -117,7 +234,7 @@ export default function FaceScan() {
               </h1>
               <p className="text-slate-600">
                 {isRegister
-                  ? "Position your face in the frame, then click to save."
+                  ? "Position your face in the frame, then click to capture."
                   : "Look at the camera and click to verify."}
               </p>
             </div>
@@ -134,7 +251,7 @@ export default function FaceScan() {
               
               {/* Face overlay guide */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className={`w-40 h-52 rounded-3xl border-2 ${scanning ? 'border-green-500 bg-green-500/20' : 'border-green-500/50 bg-green-500/5'} transition-all duration-500 ${scanning ? 'animate-pulse scale-105' : ''}`}>
+                <div className="w-40 h-52 rounded-3xl border-2 border-green-500/50 bg-green-500/5 transition-all duration-300">
                   {/* Corner indicators */}
                   <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-green-500 rounded-tl-lg"></div>
                   <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-green-500 rounded-tr-lg"></div>
@@ -142,6 +259,16 @@ export default function FaceScan() {
                   <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-green-500 rounded-br-lg"></div>
                 </div>
               </div>
+
+              {/* Camera status indicator */}
+              {!loading && (
+                <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${cameraReady ? 'bg-green-500 animate-pulse' : 'bg-slate-400'}`}></div>
+                  <span className="text-xs font-medium text-slate-600">
+                    {cameraReady ? "Camera ready" : "Starting camera..."}
+                  </span>
+                </div>
+              )}
 
               {/* Scanning indicator */}
               {scanning && (
@@ -176,10 +303,18 @@ export default function FaceScan() {
 
             <button
               onClick={scan}
-              disabled={scanning}
+              disabled={scanning || processing || !cameraReady}
               className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
             >
-              {scanning ? (
+              {processing ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </span>
+              ) : scanning ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"></circle>
