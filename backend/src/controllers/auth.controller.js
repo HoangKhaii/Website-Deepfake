@@ -721,11 +721,12 @@ async function forgotPasswordEmail(req, res) {
       [String(email).trim().toLowerCase()]
     );
 
-    // Không tiết lộ email có tồn tại hay không (security best practice)
-    // Vẫn trả về thành công để tránh user enumeration
+    // Nếu email không tồn tại, trả về lỗi
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'Email not found in our system. Please check your email or register a new account.' });
+    }
     
-    if (user.rows.length > 0) {
-      // Kiểm tra đã gửi OTP gần đây chưa
+    // Kiểm tra đã gửi OTP gần đây chưa
       const recentOtp = await query(
         `SELECT created_at FROM otp WHERE user_id = $1 AND purpose = 'forgot_password_email' ORDER BY created_at DESC LIMIT 1`,
         [user.rows[0].user_id]
@@ -755,14 +756,12 @@ async function forgotPasswordEmail(req, res) {
       // Gửi email OTP
       const emailResult = await sendOtpEmail(user.rows[0].email, otpCode);
       console.log(`[Forgot Password Email] ${user.rows[0].email} => ${otpCode}`);
-    }
 
-    // Luôn trả về thành công (không tiết lộ email tồn tại)
-    return res.json({ 
-      ok: true, 
-      message: 'If this email exists, an OTP will be sent',
-      method: 'email'
-    });
+      return res.json({ 
+        ok: true, 
+        message: 'OTP sent to your email',
+        method: 'email'
+      });
   } catch (err) {
     console.error('Forgot password email error:', err);
     return res.status(500).json({ message: err?.message || 'Failed to process request' });
@@ -789,9 +788,12 @@ async function forgotPasswordPhone(req, res) {
       [phone]
     );
 
-    // Không tiết lộ phone có tồn tại hay không
-    if (user.rows.length > 0) {
-      // Kiểm tra đã gửi OTP gần đây chưa
+    // Nếu phone không tồn tại, trả về lỗi
+    if (user.rows.length === 0) {
+      return res.status(404).json({ message: 'Phone number not found in our system. Please check your phone or register a new account.' });
+    }
+
+    // Kiểm tra đã gửi OTP gần đây chưa
       const recentOtp = await query(
         `SELECT created_at FROM otp WHERE user_id = $1 AND purpose = 'forgot_password_phone' ORDER BY created_at DESC LIMIT 1`,
         [user.rows[0].user_id]
@@ -821,14 +823,12 @@ async function forgotPasswordPhone(req, res) {
       // Gửi SMS OTP
       const smsResult = await sendOtpSms(user.rows[0].phone_number, otpCode);
       console.log(`[Forgot Password Phone] ${user.rows[0].phone_number} => ${otpCode}`);
-    }
 
-    // Luôn trả về thành công
-    return res.json({ 
-      ok: true, 
-      message: 'If this phone number exists, an OTP will be sent',
-      method: 'phone'
-    });
+      return res.json({ 
+        ok: true, 
+        message: 'OTP sent to your phone',
+        method: 'phone'
+      });
   } catch (err) {
     console.error('Forgot password phone error:', err);
     return res.status(500).json({ message: err?.message || 'Failed to process request' });
@@ -846,6 +846,11 @@ async function forgotPasswordVerify(req, res) {
 
     // Nếu không có newPassword thì chỉ verify OTP (bước trung gian)
     if (!newPassword) {
+      // Validate method bắt buộc
+      if (!method || !['email', 'phone'].includes(method)) {
+        return res.status(400).json({ message: 'Method must be email or phone' });
+      }
+
       // Tìm user dựa trên email hoặc phone
       let user;
       if (method === 'email') {
@@ -891,6 +896,12 @@ async function forgotPasswordVerify(req, res) {
       if (new Date(otpRecord.rows[0].expired_at) < new Date()) {
         return res.status(400).json({ message: 'OTP has expired' });
       }
+
+      // Xóa OTP sau khi verify thành công (bước trung gian)
+      await query(
+        `DELETE FROM otp WHERE user_id = $1 AND purpose = $2`,
+        [user.user_id, purpose]
+      );
 
       // OTP hợp lệ, trả về thành công
       return res.json({ 

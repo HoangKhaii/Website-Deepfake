@@ -254,7 +254,8 @@ export default function Login() {
               </>
             )}
 
-            <div className="text-center py-6 relative">
+            {mode === "face" && (
+              <div className="text-center py-6">
                 <div className="relative inline-block mb-6">
                   <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-green-500/20 to-blue-500/20 flex items-center justify-center animate-pulse">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-600/30">
@@ -284,6 +285,7 @@ export default function Login() {
                   </span>
                 </button>
               </div>
+            )}
 
             {/* Google Login Button */}
             <div className="mt-6">
