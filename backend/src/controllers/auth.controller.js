@@ -73,18 +73,86 @@ function toSafeUser(row) {
 
 async function register(req, res) {
   try {
-    const { username, email, password, phone_number, full_name } = req.body || {};
+    const { username, email, password, phone_number, full_name, birth_date } = req.body || {};
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
+    }
+    
+    // Validate email format
+    if (!email.endsWith('@gmail.com')) {
+      return res.status(400).json({ message: 'Email must be @gmail.com' });
+    }
+    
+    // Validate password
+    if (!password || password.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters' });
+    }
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+    }
+    if (!/[a-z]/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+    }
+    if (!/\d/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one number' });
+    }
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      return res.status(400).json({ message: 'Password must contain at least one special character' });
+    }
+    
+    // Validate full_name - phải đầy đủ họ và tên (ít nhất 2 từ)
+    if (full_name) {
+      const nameParts = full_name.trim().split(/\s+/);
+      if (nameParts.length < 2) {
+        return res.status(400).json({ message: 'Full name must include both first name and last name' });
+      }
+    }
+    
+    // Validate birth_date - không được chạy trước ngày hiện tại
+    if (birth_date) {
+      const birthDate = new Date(birth_date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // End of today
+      
+      if (birthDate > today) {
+        return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+      }
+    }
+    
+    // Validate phone - nếu có thì phải đúng 10 số
+    if (phone_number && !/^\d{10}$/.test(phone_number)) {
+      return res.status(400).json({ message: 'Phone must be exactly 10 digits' });
+    }
+    
+    // Kiểm tra email đã tồn tại chưa
+    const existingEmail = await query(
+      `SELECT user_id FROM users WHERE email = $1 LIMIT 1`,
+      [String(email).trim().toLowerCase()]
+    );
+    
+    if (existingEmail.rows.length > 0) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+    
+    // Kiểm tra số điện thoại đã tồn tại chưa (nếu có nhập)
+    if (phone_number) {
+      const existingPhone = await query(
+        `SELECT user_id FROM users WHERE phone_number = $1 LIMIT 1`,
+        [phone_number]
+      );
+      
+      if (existingPhone.rows.length > 0) {
+        return res.status(409).json({ message: 'Phone number already registered' });
+      }
     }
     
     const uname = (username || email).toString().trim();
     const hash = await bcrypt.hash(String(password), BCRYPT_ROUNDS);
     const { rows } = await query(
-      `INSERT INTO users (username, email, password_hash, phone_number, full_name, role)
-       VALUES ($1, $2, $3, $4, $5, 'user')
-       RETURNING user_id, username, email, phone_number, full_name, role, status, created_at`,
-      [uname, String(email).trim().toLowerCase(), hash, phone_number || null, full_name || null]
+      `INSERT INTO users (username, email, password_hash, phone_number, full_name, birth_date, role)
+       VALUES ($1, $2, $3, $4, $5, $6, 'user')
+       RETURNING user_id, username, email, phone_number, full_name, birth_date, role, status, created_at`,
+      [uname, String(email).trim().toLowerCase(), hash, phone_number || null, full_name || null, birth_date || null]
     );
     const user = rows[0];
     if (!user) return res.status(500).json({ message: 'Registration failed' });
@@ -277,7 +345,7 @@ async function otpVerify(req, res) {
 // Gửi OTP cho đăng ký (tạo tài khoản trước nhưng chưa active)
 async function registerOtpSend(req, res) {
   try {
-    const { email, username, password, phone_number, full_name } = req.body || {};
+    const { email, username, password, phone_number, full_name, birth_date } = req.body || {};
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
@@ -305,19 +373,50 @@ async function registerOtpSend(req, res) {
       return res.status(400).json({ message: 'Password must contain at least one special character' });
     }
     
+    // Validate full_name - phải đầy đủ họ và tên (ít nhất 2 từ)
+    if (full_name) {
+      const nameParts = full_name.trim().split(/\s+/);
+      if (nameParts.length < 2) {
+        return res.status(400).json({ message: 'Full name must include both first name and last name' });
+      }
+    }
+    
+    // Validate birth_date - không được chạy trước ngày hiện tại
+    if (birth_date) {
+      const birthDate = new Date(birth_date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      
+      if (birthDate > today) {
+        return res.status(400).json({ message: 'Date of birth cannot be in the future' });
+      }
+    }
+    
     // Validate phone
     if (phone_number && !/^\d{10}$/.test(phone_number)) {
       return res.status(400).json({ message: 'Phone must be exactly 10 digits' });
     }
     
     // Kiểm tra email đã tồn tại chưa
-    const existingUser = await query(
+    const existingEmail = await query(
       `SELECT user_id FROM users WHERE email = $1 LIMIT 1`,
       [String(email).trim().toLowerCase()]
     );
     
-    if (existingUser.rows.length > 0) {
+    if (existingEmail.rows.length > 0) {
       return res.status(409).json({ message: 'Email already registered' });
+    }
+    
+    // Kiểm tra số điện thoại đã tồn tại chưa (nếu có nhập)
+    if (phone_number) {
+      const existingPhone = await query(
+        `SELECT user_id FROM users WHERE phone_number = $1 LIMIT 1`,
+        [phone_number]
+      );
+      
+      if (existingPhone.rows.length > 0) {
+        return res.status(409).json({ message: 'Phone number already registered' });
+      }
     }
     
     // Kiểm tra đã gửi OTP gần đây chưa (chống spam)
@@ -345,10 +444,10 @@ async function registerOtpSend(req, res) {
     
     // Tạo tài khoản tạm thời (chưa active)
     const { rows } = await query(
-      `INSERT INTO users (username, email, password_hash, phone_number, full_name, role, status)
-       VALUES ($1, $2, $3, $4, $5, 'user', 'pending')
-       RETURNING user_id, username, email, phone_number, full_name, role, status, created_at`,
-      [username || email, String(email).trim().toLowerCase(), hash, phone_number || null, full_name || null]
+      `INSERT INTO users (username, email, password_hash, phone_number, full_name, birth_date, role, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'user', 'pending')
+       RETURNING user_id, username, email, phone_number, full_name, birth_date, role, status, created_at`,
+      [username || email, String(email).trim().toLowerCase(), hash, phone_number || null, full_name || null, birth_date || null]
     );
     
     const tempUser = rows[0];
