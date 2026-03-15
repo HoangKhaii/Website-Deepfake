@@ -74,7 +74,7 @@ export default function Dashboard() {
   const statCards = [
     { label: "Total Analyses", value: stats.totalDetects, icon: "🔍", color: "from-blue-500 to-cyan-500", desc: "Files analyzed" },
     { label: "Deepfakes Found", value: stats.deepfakesFound, icon: "⚠️", color: "from-red-500 to-rose-500", desc: "Suspicious content" },
-    { label: "Real Content", value: stats.realContent, icon: "✅", color: "from-green-500 to-emerald-500", desc: "Verified authentic" },
+    { label: "Real Content", value: stats.realContent, icon: "✅", color: "from-cyan-500 to-cyan-400", desc: "Verified authentic" },
     { label: "Account Age", value: user?.createdAt ? Math.floor((Date.now() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) + " days" : "N/A", icon: "📅", color: "from-purple-500 to-violet-500", desc: "Since registration" },
   ];
 
@@ -85,7 +85,7 @@ export default function Dashboard() {
       {/* Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.02%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-500/20 to-transparent rounded-full blur-[150px]"></div>
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-cyan-500/20 to-transparent rounded-full blur-[150px]"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-500/15 to-transparent rounded-full blur-[120px]"></div>
       </div>
 
@@ -93,7 +93,7 @@ export default function Dashboard() {
       <nav className="relative z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#3fb950] flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
               D
             </div>
             <span className="font-bold text-xl tracking-tight">DeepCheck</span>
@@ -110,7 +110,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mt-8 mb-8">
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#238636] to-[#2ea043] flex items-center justify-center text-3xl font-bold shadow-xl shadow-green-600/30">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#0891b2] to-[#06b6d4] flex items-center justify-center text-3xl font-bold shadow-xl shadow-cyan-600/30">
               {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
             </div>
             <div>
@@ -118,7 +118,7 @@ export default function Dashboard() {
               <p className="text-gray-400 text-sm mt-1">{user?.email}</p>
               <div className="flex items-center gap-2 mt-2">
                 {user?.hasFace ? (
-                  <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium flex items-center gap-1">
+                  <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium flex items-center gap-1">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 4 0 0 4 018 0z" clipRule="evenodd"/></svg>
                     Face ID Active
                   </span>
@@ -131,7 +131,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3">
-            <Link to="/" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#238636] to-[#2ea043] font-semibold shadow-lg shadow-green-600/25 hover:shadow-green-600/40 transition transform hover:scale-105">
+            <Link to="/" className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#0891b2] to-[#06b6d4] font-semibold shadow-lg shadow-cyan-600/25 hover:shadow-cyan-600/40 transition transform hover:scale-105">
               Start New Analysis
             </Link>
             <button onClick={logout} className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 text-sm font-medium transition">
@@ -153,7 +153,7 @@ export default function Dashboard() {
               onClick={() => setTab(t.id)}
               className={`px-5 py-3 rounded-xl text-sm font-semibold border transition whitespace-nowrap ${
                 tab === t.id
-                  ? "bg-gradient-to-r from-[#238636] to-[#2ea043] border-transparent shadow-lg shadow-green-600/25"
+                  ? "bg-gradient-to-r from-[#0891b2] to-[#06b6d4] border-transparent shadow-lg shadow-cyan-600/25"
                   : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:text-white"
               }`}
             >
@@ -190,7 +190,7 @@ export default function Dashboard() {
                 <h3 className="text-lg font-bold mb-4">Quick Actions</h3>
                 <div className="space-y-3">
                   <Link to="/" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 transition border border-white/5">
-                    <div className="w-10 h-10 rounded-xl bg-green-500/20 flex items-center justify-center text-green-400">🔍</div>
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">🔍</div>
                     <div>
                       <p className="font-medium">New Analysis</p>
                       <p className="text-gray-500 text-sm">Check video or image</p>
@@ -216,13 +216,13 @@ export default function Dashboard() {
               <div className="md:col-span-2 p-6 rounded-3xl bg-white/[0.03] border border-white/5">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold">Recent Activity</h3>
-                  <button onClick={() => setTab("history")} className="text-green-400 text-sm hover:text-green-300 transition">View All</button>
+                  <button onClick={() => setTab("history")} className="text-cyan-400 text-sm hover:text-cyan-300 transition">View All</button>
                 </div>
                 {recentActivity.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <div className="text-4xl mb-3">📭</div>
                     <p>No activity yet</p>
-                    <Link to="/" className="text-green-400 hover:underline mt-2 inline-block">Start your first analysis</Link>
+                    <Link to="/" className="text-cyan-400 hover:underline mt-2 inline-block">Start your first analysis</Link>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -230,7 +230,7 @@ export default function Dashboard() {
                       <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                            log?.type === "detect" ? (log?.meta?.verdict ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400") :
+                            log?.type === "detect" ? (log?.meta?.verdict ? "bg-red-500/20 text-red-400" : "bg-cyan-500/20 text-cyan-400") :
                             log?.type?.includes("login") ? "bg-blue-500/20 text-blue-400" :
                             "bg-gray-500/20 text-gray-400"
                           }`}>
@@ -288,7 +288,7 @@ export default function Dashboard() {
                           {log?.meta?.verdict === true ? (
                             <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-medium">Deepfake</span>
                           ) : log?.meta?.verdict === false ? (
-                            <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">Real</span>
+                            <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">Real</span>
                           ) : (
                             <span className="text-gray-500">—</span>
                           )}
@@ -297,7 +297,7 @@ export default function Dashboard() {
                           {log?.meta?.score ? `${(log.meta.score * 100).toFixed(1)}%` : "—"}
                         </td>
                         <td className="px-5 py-4">
-                          <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-medium">Completed</span>
+                          <span className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium">Completed</span>
                         </td>
                       </tr>
                     ))
@@ -320,7 +320,7 @@ export default function Dashboard() {
                       <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                         <path className="text-white/10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="3" />
                         <path
-                          className="text-green-500 transition-all duration-1000"
+                          className="text-cyan-500 transition-all duration-1000"
                           strokeDasharray={`${stats.totalDetects > 0 ? (stats.realContent / stats.totalDetects * 100) : 0}, 100`}
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                           fill="none"
@@ -338,7 +338,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                      <div className="w-4 h-4 rounded-full bg-cyan-500"></div>
                       <span className="text-gray-300">Real Content: {stats.realContent}</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -362,7 +362,7 @@ export default function Dashboard() {
                       <span className="font-bold">{myLogs.filter(l => l?.type === "detect" && new Date(l?.ts) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</span>
                     </div>
                     <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" style={{ width: `${Math.min(100, myLogs.filter(l => l?.type === "detect" && new Date(l?.ts) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length * 10)}%` }}></div>
+                      <div className="h-full bg-gradient-to-r from-cyan-500 to-cyan-400 rounded-full" style={{ width: `${Math.min(100, myLogs.filter(l => l?.type === "detect" && new Date(l?.ts) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length * 10)}%` }}></div>
                     </div>
                   </div>
                   <div>
@@ -392,7 +392,7 @@ export default function Dashboard() {
               <div className="space-y-4">
                 {myLogs.slice(0, 15).map((log, i) => (
                   <div key={i} className="flex items-center gap-4">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-cyan-500"></div>
                     <div className="flex-1 flex items-center justify-between py-2 border-b border-white/5 last:border-0">
                       <div>
                         <p className="font-medium capitalize">{log?.type?.replace(/_/g, " ")}</p>
@@ -418,7 +418,7 @@ export default function Dashboard() {
                 <h2 className="text-xl font-bold">Profile Settings</h2>
                 <button
                   onClick={() => editingProfile ? handleProfileSave() : setEditingProfile(true)}
-                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#238636] to-[#2ea043] text-sm font-semibold transition"
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0891b2] to-[#06b6d4] text-sm font-semibold transition"
                 >
                   {editingProfile ? "Save Changes" : "Edit Profile"}
                 </button>
@@ -426,7 +426,7 @@ export default function Dashboard() {
 
               <div className="space-y-6">
                 <div className="flex items-center gap-6 pb-6 border-b border-white/5">
-                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#238636] to-[#2ea043] flex items-center justify-center text-4xl font-bold shadow-xl">
+                  <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#0891b2] to-[#06b6d4] flex items-center justify-center text-4xl font-bold shadow-xl">
                     {user?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                   </div>
                   <div>
@@ -444,7 +444,7 @@ export default function Dashboard() {
                         type="text"
                         value={profileForm.full_name}
                         onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                         placeholder="Enter your name"
                       />
                     ) : (
@@ -465,7 +465,7 @@ export default function Dashboard() {
                         type="tel"
                         value={profileForm.phone}
                         onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-green-500/50"
+                        className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                         placeholder="Enter phone number"
                       />
                     ) : (
@@ -483,13 +483,13 @@ export default function Dashboard() {
                     <div className="flex items-center gap-3">
                       {user?.hasFace ? (
                         <>
-                          <span className="px-4 py-2 rounded-xl bg-green-500/20 text-green-400 font-medium">Active</span>
-                          <Link to="/face-scan" className="text-green-400 hover:text-green-300 text-sm">Re-register</Link>
+                          <span className="px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-400 font-medium">Active</span>
+                          <Link to="/face-scan" className="text-cyan-400 hover:text-cyan-300 text-sm">Re-register</Link>
                         </>
                       ) : (
                         <>
                           <span className="px-4 py-2 rounded-xl bg-gray-500/20 text-gray-400 font-medium">Not Set Up</span>
-                          <Link to="/face-scan" className="text-green-400 hover:text-green-300 text-sm">Set up now</Link>
+                          <Link to="/face-scan" className="text-cyan-400 hover:text-cyan-300 text-sm">Set up now</Link>
                         </>
                       )}
                     </div>

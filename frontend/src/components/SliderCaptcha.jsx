@@ -161,16 +161,16 @@ export default function SliderCaptcha({ onSuccess, onClose }) {
 
               {/* Target indicator */}
               <div 
-                className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-green-400 to-emerald-500 opacity-60"
+                className="absolute top-0 bottom-0 w-1 bg-gradient-to-b from-cyan-400 to-cyan-500 opacity-60"
                 style={{ left: `${targetPosition}%` }}
               >
-                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-green-500 rotate-45"></div>
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-green-500 rotate-45"></div>
+                <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-500 rotate-45"></div>
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-500 rotate-45"></div>
               </div>
 
               {/* Target icon */}
               <div 
-                className="absolute top-1/2 -translate-y-1/2 text-green-600 opacity-40"
+                className="absolute top-1/2 -translate-y-1/2 text-cyan-600 opacity-40"
                 style={{ left: `calc(${targetPosition}% - 12px)` }}
               >
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
@@ -190,7 +190,7 @@ export default function SliderCaptcha({ onSuccess, onClose }) {
                   ${error 
                     ? 'bg-gradient-to-r from-red-500 to-red-600 shadow-lg shadow-red-500/30' 
                     : verified || sliderPosition >= 99
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-500/30'
+                      ? 'bg-gradient-to-r from-cyan-500 to-cyan-400 shadow-lg shadow-cyan-500/30'
                       : 'bg-gradient-to-r from-indigo-500 to-purple-500 shadow-lg shadow-indigo-500/30 hover:scale-105'
                   }
                   ${isDragging ? 'scale-110 z-10' : ''}
@@ -233,7 +233,7 @@ export default function SliderCaptcha({ onSuccess, onClose }) {
                   Sai vị trí! Thử lại
                 </span>
               ) : verified || sliderPosition >= 99 ? (
-                <span className="text-green-600 flex items-center justify-center gap-1">
+                <span className="text-cyan-600 flex items-center justify-center gap-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>

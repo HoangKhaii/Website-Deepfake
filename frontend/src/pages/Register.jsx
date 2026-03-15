@@ -194,7 +194,7 @@ export default function Register() {
         {/* Animated Background */}
         <div className="fixed inset-0 pointer-events-none overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.5%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
-          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-cyan-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/25 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
         </div>
 
@@ -202,7 +202,7 @@ export default function Register() {
         <nav className="relative z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50 shadow-sm">
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#3fb950] flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 group-hover:scale-105 transition-transform">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
                 D
               </div>
               <span className="font-bold text-xl tracking-tight text-slate-800">DeepCheck</span>
@@ -215,10 +215,10 @@ export default function Register() {
           <div className="w-full max-w-[420px]">
             <div className="relative rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 p-8 md:p-10 shadow-xl shadow-slate-200/50 animate-fade-in-up">
               {/* Decorative elements */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-3xl"></div>
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-cyan-400/20 to-transparent rounded-full blur-3xl"></div>
               <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-3xl"></div>
 
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#238636] via-[#2ea043] to-[#3fb950] rounded-t-3xl"></div>
+              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0891b2] via-[#06b6d4] to-[#22d3ee] rounded-t-3xl"></div>
 
               <div className="text-center mb-8 relative">
                 <button
@@ -229,7 +229,7 @@ export default function Register() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </button>
-                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-600/30 animate-glow">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-600/30 animate-glow">
                   <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -237,7 +237,7 @@ export default function Register() {
                 <h1 className="text-2xl font-bold mb-2 text-slate-800">Verify Your Email</h1>
                 <p className="text-slate-600 text-sm">
                   We've sent a 6-digit code to<br />
-                  <span className="font-semibold text-green-600">{email}</span>
+                  <span className="font-semibold text-cyan-600">{email}</span>
                 </p>
               </div>
 
@@ -259,7 +259,7 @@ export default function Register() {
                   value={otpCode}
                   onChange={handleOtpChange}
                   onKeyPress={handleKeyPress}
-                  className="w-full px-6 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 text-center text-2xl font-mono tracking-[0.5em] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                  className="w-full px-6 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 text-center text-2xl font-mono tracking-[0.5em] placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                   placeholder="------"
                   maxLength={6}
                 />
@@ -268,7 +268,7 @@ export default function Register() {
               <button
                 onClick={verifyOtp}
                 disabled={otpLoading || otpCode.length !== 6}
-                className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#0891b2] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#22d3ee] text-white transition-all shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
               >
                 {otpLoading ? (
                   <span className="flex items-center justify-center gap-2">
@@ -297,7 +297,7 @@ export default function Register() {
                     <button
                       onClick={resendOtp}
                       disabled={otpLoading}
-                      className="text-green-600 hover:text-green-700 font-semibold transition hover:underline disabled:opacity-50"
+                      className="text-cyan-600 hover:text-cyan-700 font-semibold transition hover:underline disabled:opacity-50"
                     >
                       Resend OTP
                     </button>
@@ -317,11 +317,11 @@ export default function Register() {
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.5%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-cyan-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/25 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gradient-to-br from-purple-400/20 to-transparent rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }}></div>
         {/* Floating particles */}
-        <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-green-500/40 animate-bounce" style={{ animationDuration: '3s' }}></div>
+        <div className="absolute top-20 left-10 w-2 h-2 rounded-full bg-cyan-500/40 animate-bounce" style={{ animationDuration: '3s' }}></div>
         <div className="absolute top-40 right-20 w-3 h-3 rounded-full bg-blue-500/40 animate-bounce" style={{ animationDuration: '4s', animationDelay: '0.5s' }}></div>
         <div className="absolute bottom-40 left-1/4 w-2 h-2 rounded-full bg-purple-500/40 animate-bounce" style={{ animationDuration: '3.5s', animationDelay: '1s' }}></div>
       </div>
@@ -330,14 +330,14 @@ export default function Register() {
       <nav className="relative z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#3fb950] flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
               D
             </div>
             <span className="font-bold text-xl tracking-tight text-slate-800">DeepCheck</span>
           </Link>
           <div className="flex items-center gap-4">
             <Link to="/login" className="text-slate-600 hover:text-slate-900 text-sm font-medium transition">Log in</Link>
-            <span className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#238636] to-[#2ea043] text-sm font-semibold shadow-lg shadow-green-600/25">Sign up</span>
+            <span className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#0891b2] to-[#06b6d4] text-sm font-semibold shadow-lg shadow-cyan-600/25">Sign up</span>
           </div>
         </div>
       </nav>
@@ -348,13 +348,13 @@ export default function Register() {
           {/* Form card */}
           <div className="relative rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 p-8 md:p-10 shadow-xl shadow-slate-200/50 animate-fade-in-up">
             {/* Decorative elements */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-cyan-400/20 to-transparent rounded-full blur-3xl"></div>
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-3xl"></div>
             
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#238636] via-[#2ea043] to-[#3fb950] rounded-t-3xl"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0891b2] via-[#06b6d4] to-[#22d3ee] rounded-t-3xl"></div>
             
             <div className="text-center mb-8 relative">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-600/30 animate-glow">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-600/30 animate-glow">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                 </svg>
@@ -385,7 +385,7 @@ export default function Register() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                     placeholder="Enter your full name"
                   />
                 </div>
@@ -403,7 +403,7 @@ export default function Register() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                     placeholder="your.email@gmail.com"
                   />
                 </div>
@@ -421,7 +421,7 @@ export default function Register() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-14 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                    className="w-full pl-12 pr-14 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                     placeholder="Create a password"
                   />
                   <button
@@ -456,7 +456,7 @@ export default function Register() {
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full pl-12 pr-14 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                    className="w-full pl-12 pr-14 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                     placeholder="Confirm your password"
                   />
                   <button
@@ -491,7 +491,7 @@ export default function Register() {
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                       placeholder="10 digit phone"
                     />
                   </div>
@@ -510,7 +510,7 @@ export default function Register() {
                       value={dodate}
                       onChange={(e) => setDodate(e.target.value)}
                       max={new Date().toISOString().split('T')[0]}
-                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all"
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
                     />
                   </div>
                 </div>
@@ -520,7 +520,7 @@ export default function Register() {
             <button
               onClick={submitOtpRequest}
               disabled={loading}
-              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#0891b2] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#22d3ee] text-white transition-all shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -543,7 +543,7 @@ export default function Register() {
             <div className="text-center mt-8 pt-6 border-t border-slate-200/50 relative">
               <p className="text-slate-600">
                 Already have an account?{" "}
-                <Link to="/login" className="text-green-600 hover:text-green-700 font-semibold transition hover:underline">
+                <Link to="/login" className="text-cyan-600 hover:text-cyan-700 font-semibold transition hover:underline">
                   Sign in
                 </Link>
               </p>
@@ -562,13 +562,13 @@ export default function Register() {
           {/* Trust badges */}
           <div className="mt-6 flex items-center justify-center gap-6 text-slate-500 text-xs">
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Secure Registration
             </span>
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
               Encrypted

@@ -1,4 +1,6 @@
-export const API_BASE = "http://localhost:5000/api";
+// Khi mở bằng IP (vd: http://192.168.1.100:5173) thì gọi API cùng IP:5000; localhost thì dùng localhost:5000
+const API_HOST = typeof window !== "undefined" ? window.location.hostname : "localhost";
+export const API_BASE = `http://${API_HOST}:5000/api`;
 
 async function request(url, options = {}) {
   let res;
