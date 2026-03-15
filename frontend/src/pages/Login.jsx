@@ -39,12 +39,10 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await apiLogin(email, password);
-      
-      // Nếu cần xác thực 2 bước (thiết bị mới)
+
+      // Nếu cần xác thực 2 bước (thiết bị mới) → sang trang nhập mã OTP 6 số
       if (res.requiresVerification) {
-        // Lưu email vào pendingLogin để OTP page sử dụng
         setPendingLogin({ email });
-        // Chuyển đến trang OTP
         nav("/otp?type=login-email");
         return;
       }

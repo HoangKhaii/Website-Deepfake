@@ -9,10 +9,26 @@ const BCRYPT_ROUNDS = 10;
 const OTP_EXPIRE_MINUTES = 10;
 
 // Device tracking - Lưu thiết bị đã đăng nhập
-const trustedDevices = new Map(); // userId -> [{ deviceId, lastLogin, ip, userAgent }]
+// Nhận diện thiết bị bằng IP + User-Agent để phân biệt nhiều máy cùng mạng (hoặc cùng 127.0.0.1 khi dev)
+const trustedDevices = new Map(); // userId -> [{ deviceId, deviceKey, lastLogin, ip, userAgent }]
 
 function generateDeviceId() {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
+/** Lấy IP thật của client (khi đứng sau proxy/Nginx dùng X-Forwarded-For) */
+function getClientIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const first = typeof forwarded === 'string' ? forwarded.split(',')[0] : forwarded[0];
+    return (first || '').trim() || req.ip || 'unknown';
+  }
+  return req.ip || 'unknown';
+}
+
+/** Tạo "vân tay" thiết bị: IP + User-Agent để phân biệt 2 máy khác nhau (kể cả khi cùng IP 127.0.0.1) */
+function deviceKey(ip, userAgent) {
+  return `${ip}|${userAgent || ''}`;
 }
 
 function parseUserAgent(userAgent) {
@@ -38,15 +54,17 @@ function parseUserAgent(userAgent) {
 
 function isTrustedDevice(userId, ip, userAgent) {
   if (!trustedDevices.has(userId)) return false;
-  
+  const key = deviceKey(ip, userAgent);
   const devices = trustedDevices.get(userId);
-  return devices.some(d => d.ip === ip);
+  return devices.some(d => d.deviceKey === key);
 }
 
 function addTrustedDevice(userId, ip, userAgent) {
+  const key = deviceKey(ip, userAgent);
   const deviceInfo = parseUserAgent(userAgent);
   const device = {
     deviceId: generateDeviceId(),
+    deviceKey: key,
     ip,
     userAgent,
     ...deviceInfo,
@@ -57,12 +75,10 @@ function addTrustedDevice(userId, ip, userAgent) {
     trustedDevices.set(userId, []);
   }
   
-  // Giới hạn 5 thiết bị trusted
   const devices = trustedDevices.get(userId);
-  if (devices.length >= 5) {
-    devices.shift(); // Xóa thiết bị cũ nhất
-  }
-  
+  const existing = devices.findIndex(d => d.deviceKey === key);
+  if (existing >= 0) devices.splice(existing, 1);
+  if (devices.length >= 5) devices.shift();
   devices.push(device);
 }
 
@@ -186,7 +202,7 @@ async function login(req, res) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const clientIp = getClientIp(req);
     const userAgent = req.headers['user-agent'] || '';
     
     const { rows } = await query(
@@ -215,31 +231,27 @@ async function login(req, res) {
       [user.user_id]
     );
     
-    // Nếu là thiết bị chưa trusted, yêu cầu OTP
+    // Nếu là thiết bị chưa trusted, gửi 1 mã OTP 6 số qua email (nhập tay như cũ)
     if (!isTrusted) {
-      // Gửi OTP
       const otpCode = String(Math.floor(100000 + Math.random() * 900000));
       const expiredAt = new Date(Date.now() + OTP_EXPIRE_MINUTES * 60 * 1000);
-      
+
       await query(
         `INSERT INTO otp (user_id, otp_code, expired_at) VALUES ($1, $2, $3)`,
         [user.user_id, otpCode, expiredAt]
       );
-      
-      // Gửi email OTP
-      const emailResult = await sendOtpEmail(user.email, otpCode);
+
+      await sendOtpEmail(user.email, otpCode);
       console.log(`[Login OTP] ${user.email} => ${otpCode} (expires ${expiredAt.toISOString()})`);
-      
-      // Gửi thông báo đăng nhập từ thiết bị mới
+
       const deviceInfo = parseUserAgent(userAgent);
       await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp }, 'Unknown location');
-      
-      // Trả về yêu cầu xác thực 2 bước
+
       return res.json({
         requiresVerification: true,
         message: 'Please verify your identity. OTP sent to your email.',
         email: user.email,
-        user: toSafeUser(user)
+        user: toSafeUser(user),
       });
     }
     
@@ -313,7 +325,7 @@ async function otpVerify(req, res) {
       return res.status(400).json({ message: 'Email and otp_code are required' });
     }
     
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const clientIp = getClientIp(req);
     const userAgent = req.headers['user-agent'] || '';
     
     const { rows } = await query(
@@ -539,7 +551,7 @@ async function registerOtpVerify(req, res) {
       return res.status(400).json({ message: 'Email and otp_code are required' });
     }
     
-    const clientIp = req.ip || req.headers['x-forwarded-for'] || 'unknown';
+    const clientIp = getClientIp(req);
     const userAgent = req.headers['user-agent'] || '';
     
     // Tìm user và OTP (chỉ user có status = 'pending')
