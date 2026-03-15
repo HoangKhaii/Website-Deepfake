@@ -127,9 +127,7 @@ export default function Admin() {
       <nav className="relative z-50 backdrop-blur-md bg-black/30 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
-              D
-            </div>
+            <img src="/logo-deepfake.png" alt="DeepCheck" className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform" />
             <span className="font-bold text-xl tracking-tight">DeepCheck</span>
           </Link>
           <div className="flex items-center gap-4">

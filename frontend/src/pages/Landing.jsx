@@ -124,12 +124,72 @@ export default function Landing() {
   };
 
   const features = [
-    { title: "Real-Time Detection", desc: "Lightning-fast analysis delivers results in seconds, not minutes.", icon: "⚡", color: "from-amber-500 to-orange-500" },
-    { title: "High Accuracy", desc: "99% detection accuracy powered by advanced machine learning models.", icon: "🎯", color: "from-cyan-500 to-teal-500" },
-    { title: "Multi-Format Support", desc: "Analyze videos and images in MP4, WebM, MOV, JPG, PNG formats.", icon: "📁", color: "from-blue-500 to-cyan-500" },
-    { title: "Privacy First", desc: "Your files are processed securely and automatically deleted after analysis.", icon: "🔒", color: "from-purple-500 to-pink-500" },
-    { title: "Batch Processing", desc: "Analyze multiple files at once to save time and increase productivity.", icon: "📊", color: "from-rose-500 to-red-500" },
-    { title: "Detailed Reports", desc: "Get comprehensive analysis reports with confidence scores and insights.", icon: "📋", color: "from-indigo-500 to-violet-500" },
+    { 
+      title: "Real-Time Detection", 
+      desc: "Lightning-fast analysis delivers results in seconds. Our AI processes each frame instantly.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ), 
+      color: "from-amber-500 to-orange-500",
+      bgColor: "bg-amber-50"
+    },
+    { 
+      title: "High Accuracy", 
+      desc: "85% detection accuracy powered by advanced transformer-based neural networks trained on millions of samples.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      ), 
+      color: "from-cyan-500 to-teal-500",
+      bgColor: "bg-cyan-50"
+    },
+    { 
+      title: "Multi-Format Support", 
+      desc: "Analyze videos and images in all popular formats including MP4, WebM, MOV, JPG, PNG with zero quality loss.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ), 
+      color: "from-blue-500 to-cyan-500",
+      bgColor: "bg-blue-50"
+    },
+    { 
+      title: "Privacy First", 
+      desc: "Enterprise-grade security. Your files are encrypted, processed securely, and automatically deleted after analysis.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      ), 
+      color: "from-purple-500 to-pink-500",
+      bgColor: "bg-purple-50"
+    },
+    { 
+      title: "Batch Processing", 
+      desc: "Analyze multiple files simultaneously with our distributed processing engine. Save time and increase productivity.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ), 
+      color: "from-rose-500 to-red-500",
+      bgColor: "bg-rose-50"
+    },
+    { 
+      title: "Detailed Reports", 
+      desc: "Get comprehensive PDF reports with confidence scores, frame-by-frame analysis, and actionable insights.",
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ), 
+      color: "from-indigo-500 to-violet-500",
+      bgColor: "bg-indigo-50"
+    },
   ];
 
   const steps = [
@@ -140,7 +200,7 @@ export default function Landing() {
 
   const stats = [
     { value: "2.5M+", label: "Videos Analyzed", icon: "🎬" },
-    { value: "99.2%", label: "Accuracy Rate", icon: "🎯" },
+    { value: "85%", label: "Accuracy Rate", icon: "🎯" },
     { value: "150+", label: "Countries", icon: "🌍" },
     { value: "10K+", label: "Daily Users", icon: "👥" },
   ];
@@ -152,7 +212,7 @@ export default function Landing() {
   ];
 
   const faqs = [
-    { q: "How accurate is the deepfake detection?", a: "Our AI-powered detection engine achieves 99%+ accuracy on most common deepfake techniques." },
+    { q: "How accurate is the deepfake detection?", a: "Our AI-powered detection engine achieves 8585%+ accuracy on most common deepfake techniques." },
     { q: "How long does analysis take?", a: "Most videos are analyzed within seconds to a few minutes, depending on length and quality." },
     { q: "Is my data secure?", a: "Yes! All uploaded files are processed securely and automatically deleted after analysis." },
     { q: "What formats do you support?", a: "We support video formats (MP4, WebM, MOV, AVI) and image formats (JPG, PNG, WebP)." },
@@ -241,9 +301,7 @@ export default function Landing() {
       <nav className="relative z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg sm:text-xl font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
-              D
-            </div>
+            <img src="/logo-deepfake.png" alt="DeepCheck" className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform" />
             <span className="font-bold text-lg sm:text-xl tracking-tight text-slate-800">DeepCheck</span>
           </Link>
           {/* Desktop Menu */}
@@ -325,35 +383,78 @@ export default function Landing() {
             </div>
           </div>
           
-          {/* Hero Visual */}
+          {/* Hero Visual - AI Analysis Engine card */}
           <div className="relative mt-10 lg:mt-0 px-4 sm:px-0">
-            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-cyan-600/20 border border-white/20 bg-gradient-to-br from-white/80 to-white/40 backdrop-blur">
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-600/10 via-transparent to-blue-600/10"></div>
-              <div className="relative p-4 sm:p-6 lg:p-8 aspect-square max-w-sm sm:max-w-md mx-auto">
-                <div className="absolute inset-2 sm:inset-4 rounded-xl sm:rounded-2xl border border-slate-200/30 bg-white/60 flex items-center justify-center">
-                  <div className="text-center p-4">
-                    <div className="w-20 sm:w-24 lg:w-32 h-20 sm:h-24 lg:h-32 mx-auto mb-4 sm:mb-6 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#0891b2] to-[#06b6d4] flex items-center justify-center shadow-2xl shadow-cyan-600/50 animate-pulse">
-                      <svg className="w-10 sm:w-12 lg:w-16 h-10 sm:h-12 lg:h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-slate-800 text-base sm:text-lg lg:text-xl font-semibold mb-1 sm:mb-2">AI Analysis Engine</p>
-                    <p className="text-slate-500 text-xs sm:text-sm">Advanced Deep Learning</p>
-                    <div className="flex items-center justify-center gap-2 sm:gap-3 mt-4 sm:mt-6">
-                      <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-cyan-500/30 border border-cyan-500/40">
-                        <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
-                        <span className="text-cyan-700 text-xs sm:text-sm font-medium">Analyzing...</span>
-                      </div>
-                    </div>
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-cyan-600/20 border border-white/20 bg-white">
+              {/* Main Card */}
+              <div className="relative p-6 sm:p-8 aspect-square max-w-sm sm:max-w-md mx-auto">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-slate-800 font-semibold text-sm">AI Analysis Engine</p>
+                    <p className="text-slate-500 text-xs">Advanced Deep Learning</p>
                   </div>
                 </div>
-                {/* Floating elements - hidden on small screens */}
-                <div className="hidden sm:block absolute top-4 sm:top-6 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-cyan-500 text-white text-xs sm:text-sm font-semibold shadow-lg animate-bounce">99% Accurate</div>
-                <div className="hidden sm:block absolute bottom-20 sm:bottom-24 left-4 sm:left-6 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-white/80 backdrop-blur border border-slate-200 text-slate-700 text-xs sm:text-sm font-medium">Real-time Detection</div>
-                <div className="hidden sm:block absolute bottom-20 sm:bottom-24 right-4 sm:right-6 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl bg-blue-500 text-white text-xs sm:text-sm font-semibold shadow-lg">Fast Results</div>
+                
+                {/* Main Icon Circle */}
+                <div className="w-28 h-28 sm:w-32 sm:h-32 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center shadow-inner">
+                  <div className="w-20 sm:w-24 h-20 sm:h-24 rounded-xl bg-gradient-to-br from-cyan-500 to-cyan-600 flex items-center justify-center shadow-lg">
+                    <svg className="w-10 sm:w-12 h-10 sm:h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Analyzing Status */}
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-100 border border-cyan-200">
+                    <span className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse"></span>
+                    <span className="text-cyan-700 text-xs font-medium">Analyzing...</span>
+                  </div>
+                </div>
+                
+                {/* Stats Row */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 px-2 py-2 rounded-lg bg-slate-100 text-center">
+                    <p className="text-slate-800 font-bold text-sm">85%</p>
+                    <p className="text-slate-500 text-[10px]">Accuracy</p>
+                  </div>
+                  <div className="flex-1 px-2 py-2 rounded-lg bg-slate-100 text-center">
+                    <p className="text-slate-800 font-bold text-sm">0.3s</p>
+                    <p className="text-slate-500 text-[10px]">Speed</p>
+                  </div>
+                  <div className="flex-1 px-2 py-2 rounded-lg bg-slate-100 text-center">
+                    <p className="text-slate-800 font-bold text-sm">10K+</p>
+                    <p className="text-slate-500 text-[10px]">Analyzed</p>
+                  </div>
+                </div>
+                
+                {/* Floating Badge - Top Right */}
+                <div className="absolute top-4 right-4 px-2 py-1 rounded-lg bg-cyan-500 text-white text-xs font-semibold shadow-lg">
+                  85% Accurate
+                </div>
+                
+                {/* Floating Tags - Bottom */}
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                  <div className="px-2 py-1 rounded-md bg-white/90 backdrop-blur border border-slate-200 text-slate-700 text-[10px] font-medium shadow-sm">
+                    Real-time
+                  </div>
+                  <div className="px-2 py-1 rounded-md bg-blue-500 text-white text-[10px] font-semibold shadow-sm">
+                    Fast Results
+                  </div>
+                </div>
               </div>
+              
+              {/* Bottom gradient line */}
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0891b2] via-[#06b6d4] to-[#22d3ee]"></div>
             </div>
+            
+            {/* Decorative blurs */}
             <div className="absolute -top-8 sm:-top-10 -right-8 sm:-right-10 w-32 sm:w-40 h-32 sm:h-40 bg-cyan-500/20 rounded-full blur-2xl sm:blur-3xl"></div>
             <div className="absolute -bottom-8 sm:-bottom-10 -left-8 sm:-left-10 w-32 sm:w-40 h-32 sm:h-40 bg-blue-500/20 rounded-full blur-2xl sm:blur-3xl"></div>
           </div>
@@ -361,19 +462,48 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20 lg:py-24">
-        <div className="text-center mb-10 sm:mb-12 lg:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-3 sm:mb-4 text-slate-800">Powerful Features</h2>
-          <p className="text-slate-600 text-base sm:text-lg max-w-2xl mx-auto">Everything you need to detect deepfakes with confidence</p>
+      <section id="features" className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-20 sm:py-24 lg:py-32">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-50" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgb(148, 163, 184) 1px, transparent 0)`,
+          backgroundSize: '32px 32px'
+        }}></div>
+        
+        {/* Section Header */}
+        <div className="relative text-center mb-14 sm:mb-18 lg:mb-22">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/80 backdrop-blur-sm border border-slate-200/50 text-slate-600 text-xs sm:text-sm font-medium mb-5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500"></span>
+            Why Choose DeepCheck
+          </div>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-5 text-slate-900 tracking-tight">Powerful Features for Deepfake Detection</h2>
+          <p className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed">Everything you need to detect deepfakes with confidence. Our enterprise-grade AI-powered tools provide comprehensive media analysis with unmatched accuracy.</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        
+        {/* Features Grid */}
+        <div className="relative grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7 lg:gap-8">
           {features.map((feature, i) => (
-            <div key={i} className="group p-5 sm:p-6 lg:p-8 rounded-2xl sm:rounded-3xl bg-white border border-slate-200 hover:border-slate-300 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br ${feature.color} flex items-center justify-center text-2xl sm:text-3xl mb-4 sm:mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                {feature.icon}
+            <div key={i} className="group relative p-7 sm:p-8 lg:p-9 rounded-2xl bg-white/90 backdrop-blur-sm border border-slate-200/50 hover:border-slate-300/80 transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.15)]">
+              {/* Gradient top border on hover */}
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-0 group-hover:w-full h-0.5 bg-gradient-to-r ${feature.color} transition-all duration-500`}></div>
+              
+              {/* Icon Container */}
+              <div className="relative mb-6">
+                <div className={`inline-flex items-center justify-center w-14 h-14 sm:w-15 sm:h-15 lg:w-16 lg:h-16 rounded-2xl bg-gradient-to-br ${feature.color} shadow-lg shadow-${feature.color.split(' ')[1].replace('to-', '')}/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                  <div className="text-white">{feature.icon}</div>
+                </div>
               </div>
-              <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-slate-800">{feature.title}</h3>
-              <p className="text-slate-600 text-sm sm:text-base leading-relaxed">{feature.desc}</p>
+              
+              {/* Content */}
+              <h3 className="text-lg sm:text-xl font-bold mb-3 text-slate-900 group-hover:text-slate-800 transition-colors duration-300">{feature.title}</h3>
+              <p className="text-slate-500 text-sm sm:text-base leading-relaxed">{feature.desc}</p>
+              
+              {/* Learn more link */}
+              <div className="mt-5 pt-5 border-t border-slate-100/50 flex items-center justify-between">
+                <span className={`text-xs font-medium bg-gradient-to-r ${feature.color} bg-clip-text text-transparent`}>Learn more</span>
+                <svg className={`w-4 h-4 text-slate-400 group-hover:text-slate-600 transform group-hover:translate-x-1 transition-all duration-300`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           ))}
         </div>
@@ -696,7 +826,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 sm:gap-8">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg sm:text-xl font-bold shadow-lg text-white">D</div>
+              <img src="/logo-deepfake.png" alt="DeepCheck" className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl object-cover shadow-lg" />
               <div>
                 <span className="font-bold text-lg sm:text-xl block text-slate-800">DeepCheck</span>
                 <span className="text-slate-500 text-xs sm:text-sm">AI-Powered Detection</span>
