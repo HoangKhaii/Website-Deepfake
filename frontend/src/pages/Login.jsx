@@ -67,7 +67,12 @@ export default function Login() {
   };
 
   const loginFace = () => {
-    nav("/face-scan?type=login-face");
+    if (!email || !email.trim()) {
+      setError("Please enter your email to sign in with Face ID");
+      showError("Please enter your email to sign in with Face ID");
+      return;
+    }
+    nav(`/face-scan?type=login-face&email=${encodeURIComponent(email.trim())}`);
   };
 
   return (
@@ -251,23 +256,25 @@ export default function Login() {
             )}
 
             {mode === "face" && (
-              <div className="text-center py-6">
-                <div className="relative inline-block mb-6">
-                  <div className="w-28 h-28 mx-auto rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center animate-pulse">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-600/30">
-                      <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 7h2l1-2h8l1 2h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2z" />
-                        <circle cx="12" cy="14" r="4" strokeWidth={2} />
+              <div className="space-y-5">
+                <p className="text-slate-600 text-sm">Enter your email, then we'll verify your face.</p>
+                <div className="relative">
+                  <label className="block text-slate-600 text-sm font-medium mb-2">Email</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
-                    </div>
-                  </div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center shadow-lg">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
+                    </span>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-slate-100/80 backdrop-blur border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                      placeholder="your.email@gmail.com"
+                    />
                   </div>
                 </div>
-                <p className="text-slate-600 mb-6">Use your face to sign in securely</p>
                 <button
                   onClick={loginFace}
                   className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#0891b2] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#22d3ee] text-white transition-all shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/40 transform hover:scale-[1.02] active:scale-[0.98]"

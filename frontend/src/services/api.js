@@ -98,12 +98,22 @@ export const registerFace = async (email, faceImage) => {
   });
 };
 
-export const verifyFace = async (email, faceImage) => {
-  return request(`${API_BASE}/auth/verify-face`, {
+export const verifyFace = async (email, faceImage, attempt = 1) => {
+  const res = await fetch(`${API_BASE}/auth/verify-face`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, faceImage }),
+    body: JSON.stringify({ email, faceImage, attempt }),
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return {
+      success: false,
+      message: data.message || "Face verification failed",
+      remainingAttempts: data.remainingAttempts,
+      forceEmailLogin: data.forceEmailLogin,
+    };
+  }
+  return data;
 };
 
 // Forgot Password

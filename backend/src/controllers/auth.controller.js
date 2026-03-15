@@ -4,6 +4,7 @@ const { query } = require('../config/db');
 const { JWT_SECRET } = require('../middlewares/auth.middleware');
 const { sendOtpEmail, sendLoginAlertEmail } = require('../services/email.service');
 const { sendOtpSms } = require('../services/sms.service');
+const { base64ToBuffer, checkLiveness, compareFaces } = require('../services/face-ai.service');
 
 const BCRYPT_ROUNDS = 10;
 const OTP_EXPIRE_MINUTES = 10;
@@ -621,7 +622,7 @@ async function getMe(req, res) {
   }
 }
 
-// Register face for user
+// Register face for user: kiểm tra liveness (AI) trước khi lưu
 async function registerFace(req, res) {
   try {
     const { email, faceImage } = req.body || {};
@@ -634,7 +635,25 @@ async function registerFace(req, res) {
       return res.status(400).json({ success: false, message: 'Face image is required' });
     }
 
-    // Find user by email
+    const buffer = base64ToBuffer(faceImage);
+    if (!buffer || buffer.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid face image' });
+    }
+
+    // Gửi frame lên AI kiểm tra liveness (mặt thật vs ảnh)
+    let isReal = false;
+    try {
+      const liveness = await checkLiveness(buffer);
+      isReal = liveness.isReal;
+    } catch (aiErr) {
+      console.warn('Liveness check failed:', aiErr?.message);
+      return res.status(400).json({ success: false, message: 'Cannot verify live face. Please use a live face, not a photo.' });
+    }
+
+    if (!isReal) {
+      return res.status(400).json({ success: false, message: 'Use a live face to register. Photo or screen is not allowed.' });
+    }
+
     const { rows } = await query(
       `SELECT user_id, email FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email.trim()]
@@ -646,7 +665,6 @@ async function registerFace(req, res) {
 
     const user = rows[0];
 
-    // Update user with face image
     await query(
       `UPDATE users SET face_image = $1 WHERE user_id = $2`,
       [faceImage, user.user_id]
@@ -662,10 +680,12 @@ async function registerFace(req, res) {
   }
 }
 
-// Verify face for login
+// Verify face for login: liveness -> so sánh với mặt trong DB; tối đa 3 lần thử, quá 3 lần bắt đăng nhập email
+const faceLoginAttempts = new Map(); // email -> số lần thất bại
+
 async function verifyFace(req, res) {
   try {
-    const { email, faceImage } = req.body || {};
+    const { email, faceImage, attempt = 1 } = req.body || {};
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email is required' });
@@ -675,9 +695,11 @@ async function verifyFace(req, res) {
       return res.status(400).json({ success: false, message: 'Face image is required' });
     }
 
-    // Find user by email
+    const currentAttempt = Math.min(Number(attempt) || 1, 3);
+    const maxAttempts = 3;
+
     const { rows } = await query(
-      `SELECT user_id, email, face_image FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
+      `SELECT user_id, email, face_image, full_name, role, status, created_at, last_login FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
       [email.trim()]
     );
 
@@ -691,18 +713,70 @@ async function verifyFace(req, res) {
       return res.status(400).json({ success: false, message: 'No face registered for this user' });
     }
 
-    // Simple comparison: check if the new image data URL starts the same way as stored
-    // In production, you would use face-api.js to compare face descriptors
-    const storedImageMatches = user.face_image.length > 0;
-    
-    if (storedImageMatches) {
-      return res.json({
-        success: true,
-        message: 'Face verified successfully'
-      });
-    } else {
-      return res.status(401).json({ success: false, message: 'Face verification failed' });
+    const buffer = base64ToBuffer(faceImage);
+    if (!buffer || buffer.length === 0) {
+      return res.status(400).json({ success: false, message: 'Invalid face image' });
     }
+
+    // Bước 1: Kiểm tra liveness (mặt thật)
+    let isReal = false;
+    try {
+      const liveness = await checkLiveness(buffer);
+      isReal = liveness.isReal;
+    } catch (aiErr) {
+      console.warn('Liveness check failed:', aiErr?.message);
+      return res.status(401).json({
+        success: false,
+        message: 'Live face required. Please try again.',
+        remainingAttempts: maxAttempts - currentAttempt,
+        forceEmailLogin: currentAttempt >= maxAttempts,
+      });
+    }
+
+    if (!isReal) {
+      return res.status(401).json({
+        success: false,
+        message: 'Use a live face to sign in. Photo is not allowed.',
+        remainingAttempts: maxAttempts - currentAttempt,
+        forceEmailLogin: currentAttempt >= maxAttempts,
+      });
+    }
+
+    // Bước 2: So sánh với mặt đã lưu trong DB
+    const storedBuffer = base64ToBuffer(user.face_image);
+    let match = false;
+    if (storedBuffer && storedBuffer.length > 0) {
+      try {
+        const compareResult = await compareFaces(storedBuffer, buffer);
+        match = compareResult.match;
+      } catch (e) {
+        console.warn('Compare faces error:', e?.message);
+      }
+    }
+
+    if (!match) {
+      const remaining = maxAttempts - currentAttempt;
+      return res.status(401).json({
+        success: false,
+        message: remaining > 0 ? 'Face does not match. Try again.' : 'Too many failed attempts. Please sign in with email.',
+        remainingAttempts: remaining,
+        forceEmailLogin: remaining <= 0,
+      });
+    }
+
+    // Đúng mặt: xóa số lần thử, trả token
+    faceLoginAttempts.delete(email.trim().toLowerCase());
+    const token = jwt.sign(
+      { userId: user.user_id, email: user.email },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    return res.json({
+      success: true,
+      message: 'Face verified successfully',
+      user: toSafeUser(user),
+      token,
+    });
   } catch (err) {
     console.error('Verify face error:', err);
     return res.status(500).json({ success: false, message: err?.message || 'Failed to verify face' });

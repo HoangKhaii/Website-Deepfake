@@ -23,6 +23,11 @@ export default function FaceScan() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
+  const [faceLoginAttempt, setFaceLoginAttempt] = useState(1);
+
+  useEffect(() => {
+    if (type === "login-face") setFaceLoginAttempt(1);
+  }, [type, params.get("email")]);
 
   // Start video
   useEffect(() => {
@@ -72,8 +77,11 @@ export default function FaceScan() {
   const scan = async () => {
     if (scanning) return;
 
+    const isRegisterFlow = type === "register";
+    const countdownSeconds = isRegisterFlow ? 5 : 3;
+
     setScanning(true);
-    setCountdown(3);
+    setCountdown(countdownSeconds);
 
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -91,9 +99,7 @@ export default function FaceScan() {
       setScanning(false);
 
       try {
-        // Capture face image
         const faceImage = captureFace();
-        
         if (!faceImage) {
           showError("Failed to capture face. Please try again.");
           return;
@@ -101,9 +107,8 @@ export default function FaceScan() {
 
         setProcessing(true);
 
-        // For registration flow: use sessionUser if logged in, otherwise use pendingRegister
-        const userEmail = sessionUser?.email || pendingRegister?.email;
-        
+        const userEmail = sessionUser?.email || pendingRegister?.email || params.get("email");
+
         if (type === "register" && !userEmail) {
           showError("Please register through the proper flow first.");
           setProcessing(false);
@@ -111,37 +116,41 @@ export default function FaceScan() {
         }
 
         if (type === "register" && userEmail) {
-          // Save face to backend
           const response = await registerFace(userEmail, faceImage);
-
           if (response.success) {
-            // Show CAPTCHA after successful face registration
             setShowCaptcha(true);
             setCaptchaVerified(false);
           } else {
-            showError(response.message || "Failed to register face");
+            showError(response.message || "Failed to register face. Use a live face, not a photo.");
             setProcessing(false);
           }
         }
 
         if (type === "login-face") {
-          if (!sessionUser?.email) {
-            warning("No face registered! Please register with face first.");
+          const loginEmail = userEmail || sessionUser?.email;
+          if (!loginEmail) {
+            showError("Email is required for face login.");
             setProcessing(false);
             return;
           }
-          
-          // Verify face for login
-          const response = await verifyFace(sessionUser.email, faceImage);
+
+          const response = await verifyFace(loginEmail, faceImage, faceLoginAttempt);
 
           if (response.success) {
-            setUser({ ...sessionUser, hasFace: true });
-            upsertUserByEmail({ ...sessionUser, lastLoginAt: new Date().toISOString() });
-            appendLog({ type: "login_face", email: sessionUser.email });
+            if (response.token) setToken(response.token);
+            if (response.user) setUser({ ...response.user, hasFace: true });
+            appendLog({ type: "login_face", email: loginEmail });
             success("Face verification successful! Welcome back.");
             nav("/");
           } else {
-            showError(response.message || "Face verification failed");
+            const remaining = response.remainingAttempts ?? 3 - faceLoginAttempt;
+            if (response.forceEmailLogin || remaining <= 0) {
+              showError("Too many failed attempts. Please sign in with email.");
+              nav("/login", { state: { message: "Please sign in with your email and password." } });
+            } else {
+              setFaceLoginAttempt((a) => a + 1);
+              showError(`${response.message || "Face verification failed"} (${remaining} attempt(s) left)`);
+            }
           }
           setProcessing(false);
         }
@@ -150,7 +159,7 @@ export default function FaceScan() {
         showError(err.message || "An error occurred. Please try again.");
         setProcessing(false);
       }
-    }, 3000);
+    }, countdownSeconds * 1000);
   };
 
   const handleCaptchaSuccess = () => {
@@ -235,6 +244,9 @@ export default function FaceScan() {
                   ? "Position your face in the frame, then click to capture."
                   : "Look at the camera and click to verify."}
               </p>
+              {!isRegister && type === "login-face" && (
+                <p className="text-slate-500 text-sm mt-1">Attempt {faceLoginAttempt}/3</p>
+              )}
             </div>
 
             <div className="relative rounded-2xl overflow-hidden border border-slate-200 bg-slate-100 mb-6 shadow-inner">
