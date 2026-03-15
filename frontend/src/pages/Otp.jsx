@@ -98,7 +98,7 @@ export default function Otp() {
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.5%22%3E%3Cpath%20d%3D%22M36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22%2F%3E%3C%2Fg%3E%3C%2Fg%3E%3C%2Fsvg%3E')]"></div>
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-green-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-gradient-to-br from-cyan-400/30 to-transparent rounded-full blur-[150px] animate-pulse"></div>
         <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/25 to-transparent rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
@@ -106,7 +106,7 @@ export default function Otp() {
       <nav className="relative z-50 backdrop-blur-xl bg-white/70 border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#238636] to-[#3fb950] flex items-center justify-center text-lg font-bold shadow-lg shadow-green-600/30 group-hover:scale-105 transition-transform">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0891b2] to-[#22d3ee] flex items-center justify-center text-lg font-bold shadow-lg shadow-cyan-600/30 group-hover:scale-105 transition-transform">
               D
             </div>
             <span className="font-bold text-xl tracking-tight text-slate-800">DeepCheck</span>
@@ -125,13 +125,13 @@ export default function Otp() {
         <div className="w-full max-w-[440px]">
           <div className="relative rounded-3xl bg-white/80 backdrop-blur-xl border border-white/50 p-8 md:p-10 shadow-xl shadow-slate-200/50 animate-fade-in-up">
             {/* Decorative elements */}
-            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-green-400/20 to-transparent rounded-full blur-3xl"></div>
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-br from-cyan-400/20 to-transparent rounded-full blur-3xl"></div>
             <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-br from-blue-400/20 to-transparent rounded-full blur-3xl"></div>
             
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#238636] via-[#2ea043] to-[#3fb950] rounded-t-3xl"></div>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0891b2] via-[#06b6d4] to-[#22d3ee] rounded-t-3xl"></div>
             
             <div className="text-center mb-8 relative">
-              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-600/30 animate-glow">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-cyan-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-cyan-600/30 animate-glow">
                 <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -143,7 +143,7 @@ export default function Otp() {
             {type === "login-email" && (
               <p className="mb-6 text-center">
                 <span className="text-slate-500">Sent to </span>
-                <span className="text-green-600 font-semibold">{pendingLogin?.email || "your email"}</span>
+                <span className="text-cyan-600 font-semibold">{pendingLogin?.email || "your email"}</span>
               </p>
             )}
 
@@ -179,7 +179,7 @@ export default function Otp() {
                   onFocus={() => setFocusedIndex(index)}
                   className={`w-12 h-14 rounded-xl text-center text-2xl font-bold transition-all ${
                     focusedIndex === index
-                      ? 'bg-green-50 border-2 border-green-500 text-green-700 shadow-lg shadow-green-500/20'
+                      ? 'bg-cyan-50 border-2 border-cyan-500 text-cyan-700 shadow-lg shadow-cyan-500/20'
                       : 'bg-slate-100 border border-slate-200 text-slate-800'
                   } focus:outline-none`}
                   placeholder="-"
@@ -190,7 +190,7 @@ export default function Otp() {
             <button
               onClick={verify}
               disabled={loading || otpCode.length !== 6}
-              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#238636] to-[#2ea043] hover:from-[#2ea043] hover:to-[#3fb950] text-white transition-all shadow-xl shadow-green-600/20 hover:shadow-green-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full py-4 rounded-2xl font-semibold bg-gradient-to-r from-[#0891b2] to-[#06b6d4] hover:from-[#06b6d4] hover:to-[#22d3ee] text-white transition-all shadow-xl shadow-cyan-600/20 hover:shadow-cyan-600/40 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -213,7 +213,7 @@ export default function Otp() {
             {time === 0 && (
               <button 
                 onClick={handleResend}
-                className="mt-6 w-full py-3 text-green-600 hover:text-green-700 text-sm font-medium text-center transition hover:underline"
+                className="mt-6 w-full py-3 text-cyan-600 hover:text-cyan-700 text-sm font-medium text-center transition hover:underline"
               >
                 Resend OTP
               </button>
@@ -221,7 +221,7 @@ export default function Otp() {
 
             {time > 0 && (
               <p className="mt-6 text-center text-slate-500 text-sm">
-                Didn't receive? Resend in <span className="text-green-600 font-medium">{formatTime(time)}</span>
+                Didn't receive? Resend in <span className="text-cyan-600 font-medium">{formatTime(time)}</span>
               </p>
             )}
 
@@ -238,7 +238,7 @@ export default function Otp() {
           {/* Trust badge */}
           <div className="mt-6 flex items-center justify-center gap-6 text-slate-500 text-xs">
             <span className="flex items-center gap-1">
-              <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4 text-cyan-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
               Secure Verification

@@ -195,7 +195,7 @@ export default function CustomCaptcha({ onSuccess, onClose }) {
                 relative border-2
                 ${
                   selected.includes(image.id)
-                    ? "border-green-500 ring-2 ring-green-500/50 scale-95"
+                    ? "border-cyan-500 ring-2 ring-cyan-500/50 scale-95"
                     : "border-transparent hover:border-white hover:scale-105"
                 }
                 ${error ? "opacity-50" : ""}
@@ -208,7 +208,7 @@ export default function CustomCaptcha({ onSuccess, onClose }) {
                 className="w-full h-full object-cover"
               />
               {selected.includes(image.id) && (
-                <div className="absolute top-1 right-1 bg-green-500 rounded-full p-0.5">
+                <div className="absolute top-1 right-1 bg-cyan-500 rounded-full p-0.5">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                   </svg>
@@ -232,8 +232,8 @@ export default function CustomCaptcha({ onSuccess, onClose }) {
 
         {/* Verified message */}
         {verified && (
-          <div className="mb-3 p-2 bg-green-50 border border-green-200 rounded-md">
-            <p className="text-xs text-green-600 flex items-center gap-1">
+          <div className="mb-3 p-2 bg-cyan-50 border border-cyan-200 rounded-md">
+            <p className="text-xs text-cyan-600 flex items-center gap-1">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>

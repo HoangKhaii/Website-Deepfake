@@ -66,7 +66,7 @@ function NotificationContainer({ notifications, onRemove }) {
 
 function NotificationItem({ notification, onRemove, index }) {
   const typeStyles = {
-    success: "bg-green-50 border-green-200 text-green-800",
+    success: "bg-cyan-50 border-cyan-200 text-cyan-800",
     error: "bg-red-50 border-red-200 text-red-800",
     warning: "bg-amber-50 border-amber-200 text-amber-800",
     info: "bg-blue-50 border-blue-200 text-blue-800",
@@ -96,7 +96,7 @@ function NotificationItem({ notification, onRemove, index }) {
   };
 
   const iconColors = {
-    success: "text-green-600",
+    success: "text-cyan-600",
     error: "text-red-600",
     warning: "text-amber-600",
     info: "text-blue-600",
