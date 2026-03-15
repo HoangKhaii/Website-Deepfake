@@ -90,19 +90,19 @@ export const detectImage = async (imageFile, userId = null) => {
   return request(`${API_BASE}/detect-image`, { method: "POST", body: formData });
 };
 
-export const registerFace = async (email, faceImage) => {
+export const registerFace = async (email, faceImage, frames = []) => {
   return request(`${API_BASE}/auth/register-face`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, faceImage }),
+    body: JSON.stringify({ email, faceImage, frames }),
   });
 };
 
-export const verifyFace = async (email, faceImage, attempt = 1) => {
+export const verifyFace = async (email, faceImage, frames = []) => {
   const res = await fetch(`${API_BASE}/auth/verify-face`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, faceImage, attempt }),
+    body: JSON.stringify({ email, faceImage, frames }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -111,6 +111,8 @@ export const verifyFace = async (email, faceImage, attempt = 1) => {
       message: data.message || "Face verification failed",
       remainingAttempts: data.remainingAttempts,
       forceEmailLogin: data.forceEmailLogin,
+      steps: data.steps,
+      frameCount: data.frameCount,
     };
   }
   return data;

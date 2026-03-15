@@ -622,36 +622,92 @@ async function getMe(req, res) {
   }
 }
 
-// Register face for user: kiểm tra liveness (AI) trước khi lưu
-async function registerFace(req, res) {
-  try {
-    const { email, faceImage } = req.body || {};
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+function normalizeFrameInputs(faceImage, frames) {
+  const collected = [];
+  if (Array.isArray(frames)) {
+    for (const frame of frames) {
+      if (typeof frame === 'string' && frame.trim()) {
+        collected.push(frame);
+      }
     }
+  }
+  if (typeof faceImage === 'string' && faceImage.trim()) {
+    collected.unshift(faceImage);
+  }
+  return [...new Set(collected)].slice(0, 20);
+}
 
-    if (!faceImage) {
-      return res.status(400).json({ success: false, message: 'Face image is required' });
-    }
-
-    const buffer = base64ToBuffer(faceImage);
-    if (!buffer || buffer.length === 0) {
-      return res.status(400).json({ success: false, message: 'Invalid face image' });
-    }
-
-    // Gửi frame lên AI kiểm tra liveness (mặt thật vs ảnh)
-    let isReal = false;
+async function findFirstRealFrame(frameCandidates) {
+  for (const frame of frameCandidates) {
+    const buffer = base64ToBuffer(frame);
+    if (!buffer || buffer.length === 0) continue;
     try {
       const liveness = await checkLiveness(buffer);
-      isReal = liveness.isReal;
+      if (liveness.isReal) {
+        return { realFrame: frame, realBuffer: buffer };
+      }
     } catch (aiErr) {
-      console.warn('Liveness check failed:', aiErr?.message);
-      return res.status(400).json({ success: false, message: 'Cannot verify live face. Please use a live face, not a photo.' });
+      console.warn('Liveness check failed for one frame:', aiErr?.message);
+    }
+  }
+  return { realFrame: null, realBuffer: null };
+}
+
+function getFaceAttemptKey(req, email) {
+  const clientIp = getClientIp(req);
+  const userAgent = req.headers['user-agent'] || '';
+  return `${String(email).trim().toLowerCase()}|${deviceKey(clientIp, userAgent)}`;
+}
+
+const maxFaceLoginAttempts = 3;
+const faceLoginAttempts = new Map(); // email+device -> fail count
+
+function getFailCount(req, email) {
+  const key = getFaceAttemptKey(req, email);
+  return faceLoginAttempts.get(key) || 0;
+}
+
+function increaseFailCount(req, email) {
+  const key = getFaceAttemptKey(req, email);
+  const nextCount = (faceLoginAttempts.get(key) || 0) + 1;
+  faceLoginAttempts.set(key, nextCount);
+  return nextCount;
+}
+
+function resetFailCount(req, email) {
+  const key = getFaceAttemptKey(req, email);
+  faceLoginAttempts.delete(key);
+}
+
+function buildFaceStepStatus({ liveness, faceMatch }) {
+  return {
+    liveness, // passed | failed | blocked
+    faceMatch, // passed | failed | skipped
+  };
+}
+
+// Register face for user: quét nhiều frame trong 5s, AI phải xác nhận "real" trước khi lưu
+async function registerFace(req, res) {
+  try {
+    const { email, faceImage, frames } = req.body || {};
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
     }
 
-    if (!isReal) {
-      return res.status(400).json({ success: false, message: 'Use a live face to register. Photo or screen is not allowed.' });
+    const frameCandidates = normalizeFrameInputs(faceImage, frames);
+    if (frameCandidates.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one face frame is required', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
+    }
+
+    const { realFrame } = await findFirstRealFrame(frameCandidates);
+    if (!realFrame) {
+      return res.status(400).json({
+        success: false,
+        message: 'Use a live face to register. Photo or screen is not allowed.',
+        frameCount: frameCandidates.length,
+        steps: buildFaceStepStatus({ liveness: 'failed', faceMatch: 'skipped' }),
+      });
     }
 
     const { rows } = await query(
@@ -660,19 +716,21 @@ async function registerFace(req, res) {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found', steps: buildFaceStepStatus({ liveness: 'passed', faceMatch: 'skipped' }) });
     }
 
     const user = rows[0];
 
     await query(
       `UPDATE users SET face_image = $1 WHERE user_id = $2`,
-      [faceImage, user.user_id]
+      [realFrame, user.user_id]
     );
 
     return res.json({
       success: true,
-      message: 'Face registered successfully'
+      message: 'Face registered successfully',
+      frameCount: frameCandidates.length,
+      steps: buildFaceStepStatus({ liveness: 'passed', faceMatch: 'skipped' }),
     });
   } catch (err) {
     console.error('Register face error:', err);
@@ -680,23 +738,30 @@ async function registerFace(req, res) {
   }
 }
 
-// Verify face for login: liveness -> so sánh với mặt trong DB; tối đa 3 lần thử, quá 3 lần bắt đăng nhập email
-const faceLoginAttempts = new Map(); // email -> số lần thất bại
-
+// Verify face for login: check real face trước, rồi so sánh với DB; quá 3 lần bắt đăng nhập Gmail
 async function verifyFace(req, res) {
   try {
-    const { email, faceImage, attempt = 1 } = req.body || {};
+    const { email, faceImage, frames } = req.body || {};
 
     if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+      return res.status(400).json({ success: false, message: 'Email is required', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
     }
 
-    if (!faceImage) {
-      return res.status(400).json({ success: false, message: 'Face image is required' });
+    const failedBefore = getFailCount(req, email);
+    if (failedBefore >= maxFaceLoginAttempts) {
+      return res.status(401).json({
+        success: false,
+        message: 'Too many failed attempts. Please sign in with email.',
+        remainingAttempts: 0,
+        forceEmailLogin: true,
+        steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }),
+      });
     }
 
-    const currentAttempt = Math.min(Number(attempt) || 1, 3);
-    const maxAttempts = 3;
+    const frameCandidates = normalizeFrameInputs(faceImage, frames);
+    if (frameCandidates.length === 0) {
+      return res.status(400).json({ success: false, message: 'At least one face frame is required', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
+    }
 
     const { rows } = await query(
       `SELECT user_id, email, face_image, full_name, role, status, created_at, last_login FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`,
@@ -704,50 +769,37 @@ async function verifyFace(req, res) {
     );
 
     if (rows.length === 0) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
     }
 
     const user = rows[0];
 
     if (!user.face_image) {
-      return res.status(400).json({ success: false, message: 'No face registered for this user' });
+      return res.status(400).json({ success: false, message: 'No face registered for this user', steps: buildFaceStepStatus({ liveness: 'blocked', faceMatch: 'skipped' }) });
     }
 
-    const buffer = base64ToBuffer(faceImage);
-    if (!buffer || buffer.length === 0) {
-      return res.status(400).json({ success: false, message: 'Invalid face image' });
-    }
-
-    // Bước 1: Kiểm tra liveness (mặt thật)
-    let isReal = false;
-    try {
-      const liveness = await checkLiveness(buffer);
-      isReal = liveness.isReal;
-    } catch (aiErr) {
-      console.warn('Liveness check failed:', aiErr?.message);
+    // Bước 1: Liveness check trên tập frame (ít nhất 1 frame phải là người thật)
+    const { realBuffer } = await findFirstRealFrame(frameCandidates);
+    if (!realBuffer) {
+      const failed = increaseFailCount(req, email);
       return res.status(401).json({
         success: false,
-        message: 'Live face required. Please try again.',
-        remainingAttempts: maxAttempts - currentAttempt,
-        forceEmailLogin: currentAttempt >= maxAttempts,
+        message: failed >= maxFaceLoginAttempts
+          ? 'Too many failed attempts. Please sign in with email.'
+          : 'Use a live face to sign in. Photo is not allowed.',
+        remainingAttempts: Math.max(maxFaceLoginAttempts - failed, 0),
+        forceEmailLogin: failed >= maxFaceLoginAttempts,
+        frameCount: frameCandidates.length,
+        steps: buildFaceStepStatus({ liveness: 'failed', faceMatch: 'skipped' }),
       });
     }
 
-    if (!isReal) {
-      return res.status(401).json({
-        success: false,
-        message: 'Use a live face to sign in. Photo is not allowed.',
-        remainingAttempts: maxAttempts - currentAttempt,
-        forceEmailLogin: currentAttempt >= maxAttempts,
-      });
-    }
-
-    // Bước 2: So sánh với mặt đã lưu trong DB
+    // Bước 2: So sánh frame real mới với khuôn mặt đã lưu trong DB
     const storedBuffer = base64ToBuffer(user.face_image);
     let match = false;
     if (storedBuffer && storedBuffer.length > 0) {
       try {
-        const compareResult = await compareFaces(storedBuffer, buffer);
+        const compareResult = await compareFaces(storedBuffer, realBuffer);
         match = compareResult.match;
       } catch (e) {
         console.warn('Compare faces error:', e?.message);
@@ -755,17 +807,25 @@ async function verifyFace(req, res) {
     }
 
     if (!match) {
-      const remaining = maxAttempts - currentAttempt;
+      const failed = increaseFailCount(req, email);
+      const remaining = Math.max(maxFaceLoginAttempts - failed, 0);
       return res.status(401).json({
         success: false,
         message: remaining > 0 ? 'Face does not match. Try again.' : 'Too many failed attempts. Please sign in with email.',
         remainingAttempts: remaining,
         forceEmailLogin: remaining <= 0,
+        frameCount: frameCandidates.length,
+        steps: buildFaceStepStatus({ liveness: 'passed', faceMatch: 'failed' }),
       });
     }
 
-    // Đúng mặt: xóa số lần thử, trả token
-    faceLoginAttempts.delete(email.trim().toLowerCase());
+    // Đúng mặt: reset số lần sai, cập nhật login time và trả token
+    resetFailCount(req, email);
+    await query(
+      `UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1`,
+      [user.user_id]
+    );
+
     const token = jwt.sign(
       { userId: user.user_id, email: user.email },
       JWT_SECRET,
@@ -776,6 +836,9 @@ async function verifyFace(req, res) {
       message: 'Face verified successfully',
       user: toSafeUser(user),
       token,
+      frameCount: frameCandidates.length,
+      remainingAttempts: maxFaceLoginAttempts,
+      steps: buildFaceStepStatus({ liveness: 'passed', faceMatch: 'passed' }),
     });
   } catch (err) {
     console.error('Verify face error:', err);

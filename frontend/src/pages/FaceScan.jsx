@@ -2,31 +2,44 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { useSession } from "../context/SessionContext";
 import { useNotification } from "../components/Notification";
-import { appendLog, upsertUserByEmail } from "../services/storage";
+import { appendLog } from "../services/storage";
 import { registerFace, verifyFace } from "../services/api";
 import SliderCaptcha from "../components/SliderCaptcha";
 
 export default function FaceScan() {
   const videoRef = useRef();
   const canvasRef = useRef();
+  const frameGuideRef = useRef();
   const streamRef = useRef(null);
   const nav = useNavigate();
   const [params] = useSearchParams();
   const type = params.get("type");
   const isRegister = type === "register";
-  const { pendingRegister, user: sessionUser, setUser, setPendingRegister, setFaceRegistered, isFaceRegistered } = useSession();
-  const { success, error: showError, warning } = useNotification();
+  const { pendingRegister, user: sessionUser, setUser, setToken, setPendingRegister, setFaceRegistered } = useSession();
+  const { success, error: showError, info } = useNotification();
   const [scanning, setScanning] = useState(false);
   const [countdown, setCountdown] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [captchaVerified, setCaptchaVerified] = useState(false);
   const [showCaptcha, setShowCaptcha] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [cameraReady, setCameraReady] = useState(false);
-  const [faceLoginAttempt, setFaceLoginAttempt] = useState(1);
+  const [remainingAttempts, setRemainingAttempts] = useState(3);
+  const [faceDebug, setFaceDebug] = useState({
+    liveness: "blocked",
+    faceMatch: "skipped",
+    frameCount: 0,
+    message: "",
+  });
 
   useEffect(() => {
-    if (type === "login-face") setFaceLoginAttempt(1);
+    if (type === "login-face") {
+      setRemainingAttempts(3);
+      setFaceDebug({
+        liveness: "blocked",
+        faceMatch: "skipped",
+        frameCount: 0,
+        message: "",
+      });
+    }
   }, [type, params.get("email")]);
 
   // Start video
@@ -64,14 +77,67 @@ export default function FaceScan() {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
+    const guide = frameGuideRef.current;
+
+    if (!video.videoWidth || !video.videoHeight) return null;
+
+    // Enforce scanning only inside the guide frame (center crop as fallback)
+    let sx = Math.round(video.videoWidth * 0.375);
+    let sy = Math.round(video.videoHeight * 0.25);
+    let sw = Math.round(video.videoWidth * 0.25);
+    let sh = Math.round(video.videoHeight * 0.5);
+
+    if (guide) {
+      const videoRect = video.getBoundingClientRect();
+      const guideRect = guide.getBoundingClientRect();
+
+      if (videoRect.width > 0 && videoRect.height > 0) {
+        const scaleX = video.videoWidth / videoRect.width;
+        const scaleY = video.videoHeight / videoRect.height;
+
+        sx = Math.max(0, Math.round((guideRect.left - videoRect.left) * scaleX));
+        sy = Math.max(0, Math.round((guideRect.top - videoRect.top) * scaleY));
+        sw = Math.min(video.videoWidth - sx, Math.round(guideRect.width * scaleX));
+        sh = Math.min(video.videoHeight - sy, Math.round(guideRect.height * scaleY));
+      }
+    }
+
+    if (sw <= 0 || sh <= 0) return null;
+
+    canvas.width = sw;
+    canvas.height = sh;
+
     const ctx = canvas.getContext("2d");
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, sx, sy, sw, sh, 0, 0, sw, sh);
 
     return canvas.toDataURL("image/jpeg", 0.9);
+  }, []);
+
+  const wait = useCallback((ms) => new Promise((resolve) => setTimeout(resolve, ms)), []);
+
+  const collectFramesDuringScan = useCallback(async (durationMs) => {
+    const frames = [];
+    const startedAt = Date.now();
+    const intervalMs = 700;
+
+    while (Date.now() - startedAt < durationMs) {
+      const frame = captureFace();
+      if (frame) frames.push(frame);
+      await wait(intervalMs);
+    }
+
+    const finalFrame = captureFace();
+    if (finalFrame) frames.push(finalFrame);
+    return frames;
+  }, [captureFace, wait]);
+
+  const applyFaceDebug = useCallback((response, fallbackMessage = "") => {
+    setFaceDebug({
+      liveness: response?.steps?.liveness || "blocked",
+      faceMatch: response?.steps?.faceMatch || "skipped",
+      frameCount: response?.frameCount || 0,
+      message: response?.message || fallbackMessage || "",
+    });
   }, []);
 
   const scan = async () => {
@@ -79,9 +145,11 @@ export default function FaceScan() {
 
     const isRegisterFlow = type === "register";
     const countdownSeconds = isRegisterFlow ? 5 : 3;
+    const scanDurationMs = countdownSeconds * 1000;
 
     setScanning(true);
     setCountdown(countdownSeconds);
+    const frameCollectorPromise = collectFramesDuringScan(scanDurationMs);
 
     const countdownInterval = setInterval(() => {
       setCountdown((prev) => {
@@ -99,8 +167,9 @@ export default function FaceScan() {
       setScanning(false);
 
       try {
-        const faceImage = captureFace();
-        if (!faceImage) {
+        const frameCollection = await frameCollectorPromise;
+        const faceImage = frameCollection[frameCollection.length - 1] || captureFace();
+        if (!faceImage || frameCollection.length === 0) {
           showError("Failed to capture face. Please try again.");
           return;
         }
@@ -116,10 +185,12 @@ export default function FaceScan() {
         }
 
         if (type === "register" && userEmail) {
-          const response = await registerFace(userEmail, faceImage);
+          info("Sending frames to AI for real/fake check...", { title: "AI Liveness", duration: 2200 });
+          const response = await registerFace(userEmail, faceImage, frameCollection);
+          applyFaceDebug(response, "Register face flow");
           if (response.success) {
+            success("AI verified REAL face. Face data saved to database.", { duration: 2500 });
             setShowCaptcha(true);
-            setCaptchaVerified(false);
           } else {
             showError(response.message || "Failed to register face. Use a live face, not a photo.");
             setProcessing(false);
@@ -134,21 +205,31 @@ export default function FaceScan() {
             return;
           }
 
-          const response = await verifyFace(loginEmail, faceImage, faceLoginAttempt);
+          info("Checking AI liveness (real/fake) before face match...", { title: "AI Verification", duration: 2200 });
+          const response = await verifyFace(loginEmail, faceImage, frameCollection);
+          applyFaceDebug(response, "Login face flow");
 
           if (response.success) {
+            info("AI liveness passed: REAL face detected.", { duration: 1800 });
+            info("Face matched with database image of this email.", { duration: 2000 });
             if (response.token) setToken(response.token);
             if (response.user) setUser({ ...response.user, hasFace: true });
+            setRemainingAttempts(response.remainingAttempts ?? 3);
             appendLog({ type: "login_face", email: loginEmail });
             success("Face verification successful! Welcome back.");
             nav("/");
           } else {
-            const remaining = response.remainingAttempts ?? 3 - faceLoginAttempt;
+            const remaining = response.remainingAttempts ?? remainingAttempts - 1;
+            if (response?.steps?.liveness === "failed") {
+              showError(`AI liveness failed (fake/not live). ${response.message || ""}`.trim());
+            } else if (response?.steps?.liveness === "passed" && response?.steps?.faceMatch === "failed") {
+              showError(`AI says REAL, but face does not match database. ${response.message || ""}`.trim());
+            }
             if (response.forceEmailLogin || remaining <= 0) {
               showError("Too many failed attempts. Please sign in with email.");
               nav("/login", { state: { message: "Please sign in with your email and password." } });
             } else {
-              setFaceLoginAttempt((a) => a + 1);
+              setRemainingAttempts(remaining);
               showError(`${response.message || "Face verification failed"} (${remaining} attempt(s) left)`);
             }
           }
@@ -162,8 +243,20 @@ export default function FaceScan() {
     }, countdownSeconds * 1000);
   };
 
+  const stepBadgeClass = (status) => {
+    if (status === "passed") return "bg-cyan-50 text-cyan-700 border-cyan-200";
+    if (status === "failed") return "bg-red-50 text-red-700 border-red-200";
+    return "bg-slate-100 text-slate-600 border-slate-200";
+  };
+
+  const stepLabel = (status) => {
+    if (status === "passed") return "PASS";
+    if (status === "failed") return "FAIL";
+    if (status === "blocked") return "BLOCKED";
+    return "SKIPPED";
+  };
+
   const handleCaptchaSuccess = () => {
-    setCaptchaVerified(true);
     setShowCaptcha(false);
     
     const userEmail = sessionUser?.email || pendingRegister?.email;
@@ -212,7 +305,6 @@ export default function FaceScan() {
               }}
               onClose={() => {
                 setShowCaptcha(false);
-                setCaptchaVerified(false);
                 setProcessing(false);
               }}
             />
@@ -241,11 +333,11 @@ export default function FaceScan() {
               </h1>
               <p className="text-slate-600">
                 {isRegister
-                  ? "Position your face in the frame, then click to capture."
-                  : "Look at the camera and click to verify."}
+                  ? "Position your face in the frame, then click to capture. Frames will be sent to AI to check real/fake."
+                  : "Look at the camera and click to verify. AI checks liveness before matching."}
               </p>
               {!isRegister && type === "login-face" && (
-                <p className="text-slate-500 text-sm mt-1">Attempt {faceLoginAttempt}/3</p>
+                <p className="text-slate-500 text-sm mt-1">Remaining attempts: {remainingAttempts}/3</p>
               )}
             </div>
 
@@ -260,8 +352,16 @@ export default function FaceScan() {
               <canvas ref={canvasRef} className="hidden" />
               
               {/* Face overlay guide */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Blur and dim everything outside the face frame */}
+                <div className="absolute top-0 left-0 right-0 h-[calc(50%-6.5rem)] bg-black/20 backdrop-blur-[3px]"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-[calc(50%-6.5rem)] bg-black/20 backdrop-blur-[3px]"></div>
+                <div className="absolute left-0 top-[calc(50%-6.5rem)] h-52 w-[calc(50%-5rem)] bg-black/20 backdrop-blur-[3px]"></div>
+                <div className="absolute right-0 top-[calc(50%-6.5rem)] h-52 w-[calc(50%-5rem)] bg-black/20 backdrop-blur-[3px]"></div>
+              </div>
+
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-40 h-52 rounded-3xl border-2 border-cyan-500/50 bg-cyan-500/5 transition-all duration-300">
+                <div ref={frameGuideRef} className="w-40 h-52 rounded-3xl border-2 border-cyan-500/50 bg-cyan-500/5 transition-all duration-300">
                   {/* Corner indicators */}
                   <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-cyan-500 rounded-tl-lg"></div>
                   <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-cyan-500 rounded-tr-lg"></div>
@@ -271,14 +371,12 @@ export default function FaceScan() {
               </div>
 
               {/* Camera status indicator */}
-              {!loading && (
-                <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${cameraReady ? 'bg-cyan-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                  <span className="text-xs font-medium text-slate-600">
-                    {cameraReady ? "Camera ready" : "Starting camera..."}
-                  </span>
-                </div>
-              )}
+              <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur shadow-sm flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full ${cameraReady ? 'bg-cyan-500 animate-pulse' : 'bg-slate-400'}`}></div>
+                <span className="text-xs font-medium text-slate-600">
+                  {cameraReady ? "Camera ready" : "Starting camera..."}
+                </span>
+              </div>
 
               {/* Scanning indicator */}
               {scanning && (
@@ -368,6 +466,29 @@ export default function FaceScan() {
               <li>• Look directly at the camera</li>
             </ul>
           </div>
+
+          {type === "login-face" && (
+            <div className="mt-4 p-4 rounded-2xl bg-white/70 backdrop-blur border border-slate-200/60">
+              <p className="text-sm font-semibold text-slate-700 mb-3">Face Login Debug</p>
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="text-slate-600">AI Liveness</span>
+                <span className={`px-2 py-1 rounded-lg border font-semibold ${stepBadgeClass(faceDebug.liveness)}`}>
+                  {stepLabel(faceDebug.liveness)}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="text-slate-600">DB Face Match</span>
+                <span className={`px-2 py-1 rounded-lg border font-semibold ${stepBadgeClass(faceDebug.faceMatch)}`}>
+                  {stepLabel(faceDebug.faceMatch)}
+                </span>
+              </div>
+              <div className="text-xs text-slate-500">Frames sent: {faceDebug.frameCount || 0}</div>
+              <div className="text-xs text-slate-500">Remaining attempts: {remainingAttempts}</div>
+              {faceDebug.message && (
+                <div className="mt-2 text-xs text-slate-600">{faceDebug.message}</div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
