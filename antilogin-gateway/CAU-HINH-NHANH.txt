@@ -1,0 +1,14 @@
+antilogin-gateway — proxy tới Silent-Face-Anti-Spoofing (đăng ký / đăng nhập mặt)
+
+1) Cài model .pth vào Silent-Face-Anti-Spoofing-master/resources/anti_spoof_models/
+2) Chạy FastAPI (bắt buộc --host 0.0.0.0 hoặc python -m api.main):
+   cd Silent-Face-Anti-Spoofing-master
+   python -m api.main
+   hoặc: uvicorn api.app:app --host 0.0.0.0 --port 8010
+3) Copy .env.example -> .env trong antilogin-gateway (sửa SILENT_FACE_ANTI_SPOOF_URL nếu cần)
+4) cd antilogin-gateway && npm install && npm start
+   → http://0.0.0.0:5003  |  POST /api/predict  (field: file)
+5) Backend: ANTI_SPOOF_PREDICT_URL=http://26.54.212.200:5003/api/predict
+   Máy khác qua Radmin VPN: dùng IP Radmin của máy chạy gateway (ví dụ 26.x.x.x).
+
+deepfake_ai + upload_ai chỉ dùng cho chức năng upload (fusion), không đi luồng đăng ký mặt.
