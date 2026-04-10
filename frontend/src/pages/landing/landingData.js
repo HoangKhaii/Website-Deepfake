@@ -1,15 +1,16 @@
 import TechCorpLogo from "../../Images/TechCorp.png";
 import SecureNetLogo from "../../Images/SecureNet.png";
 import DataFlowLogo from "../../Images/DataFlow.png";
+import heroSlide1 from "../../Images/hero-slide-logged-in-community.png";
 import heroSlide2 from "../../Images/hero-slide-2.png";
 import heroSlide3 from "../../Images/hero-slide-3.png";
 import heroSlide4 from "../../Images/hero-slide-4.png";
 
 /**
- * Fixed hero background. OpenAI CDN is proxied via /openai-img-proxy/ (see vite + vercel config).
+ * First hero slide — bundled asset so it works on static hosts (Render, etc.).
+ * A /openai-img-proxy/ URL only works under Vite dev; production has no proxy.
  */
-export const HERO_BACKGROUND_IMAGE =
-  "/openai-img-proxy/static-rsc-4/u_nVaZZAEdcrA1GTMUf15veIPI0Iufbzo5FM4N_cyBUQLwyE5n5s84X6Mi5FfRwi5kgwFJ57jWLd6IxmdC3QugxAHB5Ef_DCJQ8bE6jKav-31Yzi6coqLS40KMh9OTslewXJV_YH4R22b8Vs7fhWWMd2tuh5ejpOIBs0DxG1uEnA9-jhHpANIIDm-rQORMWK?purpose=fullsize";
+export const HERO_BACKGROUND_IMAGE = heroSlide1;
 
 /** Second hero slide (facial recognition / biometrics). */
 export const HERO_BACKGROUND_CIRCUIT = heroSlide2;
