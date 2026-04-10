@@ -1,0 +1,18 @@
+# Root workspace (concurrently)
+node_modules/
+
+backend/.env
+backend/.env.local
+backend/uploads/
+backend/node_modules/
+
+ai-gateway/.env
+ai-gateway/.env.local
+ai-gateway/node_modules/
+
+upload-ai-gateway/.env
+upload-ai-gateway/.env.local
+upload-ai-gateway/node_modules/
+
+frontend/.env
+frontend/.env.local

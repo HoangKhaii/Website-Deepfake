@@ -1,0 +1,22 @@
+{
+  "name": "upload-ai-gateway",
+  "version": "1.0.0",
+  "description": "Gateway proxy tới FastAPI upload_ai (tách khỏi ai-gateway deepfake)",
+  "main": "server.js",
+  "scripts": {
+    "prestart": "npx kill-port 5002",
+    "start": "node server.js",
+    "dev": "npx kill-port 5002 && node server.js"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "kill-port": "^2.0.1"
+  }
+}
