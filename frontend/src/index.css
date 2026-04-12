@@ -1,0 +1,150 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-padding-top: 5rem;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+    }
+    to {
+      box-shadow: 0 0 40px rgba(6, 182, 212, 0.6);
+    }
+  }
+
+  .animate-shake {
+    animation: shake 0.5s ease-in-out;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+  }
+
+  .animate-faq-answer {
+    animation: faqAnswerIn 0.32s ease-out forwards;
+  }
+
+  @keyframes faqAnswerIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /** Dashboard route: soft reveal on enter (fade + lift + ease) */
+  .animate-dashboard-nav-in {
+    animation: dashboardReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-dashboard-main-in {
+    animation: dashboardReveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.09s forwards;
+    opacity: 0;
+  }
+
+  .animate-nav-gradient-shift {
+    background-size: 220% 220%;
+    animation: navGradientShift 16s ease-in-out infinite alternate;
+  }
+
+  .animate-nav-glow-drift {
+    animation: navGlowDrift 14s ease-in-out infinite alternate;
+  }
+
+  @keyframes dashboardReveal {
+    from {
+      opacity: 0;
+      transform: translateY(18px) scale(0.985);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes navGradientShift {
+    0% {
+      background-position: 0% 50%;
+      filter: saturate(1);
+    }
+    50% {
+      background-position: 55% 50%;
+      filter: saturate(1.08);
+    }
+    100% {
+      background-position: 100% 50%;
+      filter: saturate(1);
+    }
+  }
+
+  @keyframes navGlowDrift {
+    0% {
+      transform: translate3d(-8px, 0, 0) scale(1);
+      opacity: 0.16;
+    }
+    50% {
+      transform: translate3d(12px, -2px, 0) scale(1.04);
+      opacity: 0.24;
+    }
+    100% {
+      transform: translate3d(-4px, 0, 0) scale(1.01);
+      opacity: 0.18;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-dashboard-nav-in,
+    .animate-dashboard-main-in,
+    .animate-nav-gradient-shift,
+    .animate-nav-glow-drift {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+  }
+}

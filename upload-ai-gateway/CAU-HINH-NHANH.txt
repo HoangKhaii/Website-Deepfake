@@ -1,0 +1,24 @@
+upload-ai-gateway — proxy tới con upload_ai (FastAPI), tách hẳn ai-gateway (deepfake).
+
+CHẠY (mỗi máy dev / bạn bè):
+  cd upload-ai-gateway
+  copy .env.example .env
+  npm install
+  npm start
+  → cổng 5002, GET http://<IP-máy-chạy-gateway>:5002/health
+
+FILE .env (copy từ .env.example):
+  UPLOAD_AI_SERVER=http://26.54.212.200:8001
+  (Radmin máy TUANANH — máy chạy python -m api.main trong upload_ai)
+
+MÁY TUANANH (chủ):
+  - Bật upload_ai:8001 và Radmin.
+  - Dùng UPLOAD_AI_SERVER theo IP Radmin máy chạy FastAPI.
+
+BACKEND NODE (Website-Deepfake/backend):
+  Mặc định đã trỏ http://26.54.212.200:5002/api/predict
+  → Bắt buộc chạy upload-ai-gateway trước khi test upload trên web.
+
+RADMIN (tham khảo):
+  TUANANH: 26.54.212.200
+  ADMIN-PC: 26.91.146.177 | Kyan: 26.118.179.176 | DESKTOP-RV: 26.233.163.29

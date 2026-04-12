@@ -1,0 +1,12 @@
+const RAW_SERVER = process.env.UPLOAD_AI_SERVER || 'http://26.54.212.200:8001';
+const UPLOAD_AI_SERVER = RAW_SERVER.replace(/\/+$/, '');
+const PREDICT_URL = `${UPLOAD_AI_SERVER}/api/v1/predict`;
+const REQUEST_TIMEOUT_IMAGE_MS = Number(process.env.UPLOAD_AI_TIMEOUT_IMAGE_MS || 120000);
+const REQUEST_TIMEOUT_VIDEO_MS = Number(process.env.UPLOAD_AI_TIMEOUT_VIDEO_MS || 300000);
+
+module.exports = {
+  UPLOAD_AI_SERVER,
+  PREDICT_URL,
+  REQUEST_TIMEOUT_IMAGE_MS,
+  REQUEST_TIMEOUT_VIDEO_MS,
+};

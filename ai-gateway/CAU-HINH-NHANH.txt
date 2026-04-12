@@ -1,0 +1,19 @@
+ai-gateway — proxy tới deepfake_ai FastAPI (detect + compare-faces).
+
+CHẠY (mỗi máy dev / bạn bè):
+  cd ai-gateway
+  copy .env.example .env
+  npm install
+  npm start
+  → cổng 5001, GET http://<IP-máy-chạy-gateway>:5001/health
+
+FILE .env (copy từ .env.example):
+  AI_SERVER=http://26.54.212.200:8000
+  (Radmin máy chạy deepfake_ai FastAPI)
+
+BACKEND NODE (Website-Deepfake/backend):
+  AI_GATEWAY_DETECT_URL=http://26.54.212.200:5001/api/detect
+  AI_GATEWAY_COMPARE_URL=http://26.54.212.200:5001/api/compare-faces
+
+RADMIN (tham khảo):
+  TUANANH: 26.54.212.200
