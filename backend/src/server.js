@@ -66,8 +66,14 @@ async function start() {
       process.env.UPLOAD_AI_PREDICT_URL || 'http://26.54.212.200:5002/api/predict (gateway default)';
     const gwUrl =
       process.env.AI_GATEWAY_DETECT_URL || 'http://26.54.212.200:5001/api/detect (default)';
+    const antiSpoofUrl = (
+      process.env.ANTI_SPOOF_PREDICT_URL ||
+      process.env.ANTILOGIN_GATEWAY_PREDICT_URL ||
+      'http://26.54.212.200:5003/api/predict'
+    ).trim();
     console.log(`🤖 upload_ai (landing): ${uploadUrl}`);
     console.log(`🤖 deepfake gateway (face): ${gwUrl}`);
+    console.log(`🤖 antilogin-gateway (anti-spoof): ${antiSpoofUrl}`);
     console.log('='.repeat(50));
   });
 }
