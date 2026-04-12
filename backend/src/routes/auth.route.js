@@ -51,7 +51,7 @@ router.get('/me', authJWT, getMe);
 
 // --- Google OAuth ---
 function resolveFrontendUrl() {
-  const fallback = 'http://26.54.212.200:5173';
+  const fallback = 'http://localhost:5173';
   const raw = String(process.env.FRONTEND_URL || fallback).trim();
   // Defensive: tolerate `.env` values with inline comments/spaces.
   const cleaned = raw.split(/\s+/)[0].replace(/\/+$/, '');

@@ -11,6 +11,7 @@ export default defineConfig({
   envDir: __dirname,
   plugins: [react()],
   server: {
+    port: 5173,
     host: true, // Cho phép truy cập từ máy khác trong mạng (vd: http://192.168.1.100:5173)
     // Ảnh images.openai.com thường không nhúng trực tiếp được → proxy qua cùng origin khi dev
     proxy: {
@@ -21,6 +22,10 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/openai-img-proxy/, ''),
       },
     },
+  },
+  preview: {
+    port: 5173,
+    host: true,
   },
   optimizeDeps: {
     include: ['face-api.js']
