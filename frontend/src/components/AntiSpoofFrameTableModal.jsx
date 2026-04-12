@@ -2,7 +2,7 @@ import { useMemo } from "react";
 
 /**
  * Modal bảng kết quả Silent-Face từng frame (đăng nhập mặt).
- * @param {{ open: boolean, loading?: boolean, onClose: () => void, frames: array, fusion: object | null, title?: string, subtitle?: string, outcome?: 'loading' | 'success' | 'liveness_fail' | 'match_fail' }} props
+ * @param {{ open: boolean, loading?: boolean, onClose: () => void, frames: array, fusion: object | null, title?: string, subtitle?: string, outcome?: 'loading' | 'success' | 'liveness_fail' | 'match_fail' | 'user_not_found' | 'force_email' }} props
  */
 export default function AntiSpoofFrameTableModal({
   open,
@@ -38,7 +38,7 @@ export default function AntiSpoofFrameTableModal({
       ? "border-cyan-400 bg-cyan-50/90"
       : outcome === "success"
       ? "border-emerald-400 bg-emerald-50/90"
-      : outcome === "liveness_fail"
+      : outcome === "liveness_fail" || outcome === "user_not_found"
       ? "border-amber-400 bg-amber-50/90"
       : "border-rose-400 bg-rose-50/90";
 
@@ -117,7 +117,9 @@ export default function AntiSpoofFrameTableModal({
                 {frames.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-500">
-                      No detailed rows returned by server (check antilogin-gateway / Silent-Face).
+                      {outcome === "user_not_found"
+                        ? "Silent-Face was not run — the server rejected the request before liveness checks (see message above)."
+                        : "No detailed rows returned by server (check antilogin-gateway / Silent-Face)."}
                     </td>
                   </tr>
                 ) : (

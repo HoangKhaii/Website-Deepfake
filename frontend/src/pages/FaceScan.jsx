@@ -73,18 +73,11 @@ export default function FaceScan() {
   const registerFlowFinishedRef = useRef(false);
   const registerFaceApiOkRef = useRef(false);
   const pendingRegisterFramesRef = useRef(null);
-  const pendingNavAfterAntiSpoofModalRef = useRef(false);
   const pendingForceEmailAfterAntiSpoofModalRef = useRef(false);
   const [antiSpoofReport, setAntiSpoofReport] = useState(null);
 
   const handleAntiSpoofReportClose = useCallback(() => {
     setAntiSpoofReport(null);
-    if (pendingNavAfterAntiSpoofModalRef.current) {
-      pendingNavAfterAntiSpoofModalRef.current = false;
-      success("Face verification successful! Welcome back.");
-      nav("/");
-      return;
-    }
     if (pendingForceEmailAfterAntiSpoofModalRef.current) {
       pendingForceEmailAfterAntiSpoofModalRef.current = false;
       showError("Maximum attempts reached. Please log in with email.");
@@ -365,15 +358,6 @@ export default function FaceScan() {
             setProcessing(false);
             return;
           }
-          setAntiSpoofReport({
-            open: true,
-            loading: true,
-            frames: [],
-            fusion: null,
-            title: "Running Silent-Face checks",
-            subtitle: `Uploaded ${faceFrames.length} frames to the server...`,
-            outcome: "loading",
-          });
           try {
             setProcessingStatus("Face verification in progress...", "info", true);
             setProcessingStatus("Matching with saved image...", "info");
@@ -395,17 +379,9 @@ export default function FaceScan() {
                 /* ignore */
               }
               setProcessingStatus("The face matches the registered photo.", "success", true);
-              const rows = Array.isArray(response.antiSpoofFrames) ? response.antiSpoofFrames : [];
-              pendingNavAfterAntiSpoofModalRef.current = true;
-              setAntiSpoofReport({
-                open: true,
-                loading: false,
-                frames: rows,
-                fusion: response.frameStats?.livenessFusion ?? null,
-                outcome: "success",
-                title: "Silent-Face results - face login",
-                subtitle: `${rows.length || faceFrames.length} frames analyzed by AI. Close to continue.`,
-              });
+              setAntiSpoofReport(null);
+              success("Face verification successful! Welcome back.");
+              nav("/");
             }
           } catch (err) {
             const body = err.body || {};
@@ -431,18 +407,31 @@ export default function FaceScan() {
               }
             } else {
               const rows = Array.isArray(body.antiSpoofFrames) ? body.antiSpoofFrames : [];
+              const rawMsg = body.message || err.message || "Face verification failed";
+              const isUserNotFound =
+                err?.status === 404 ||
+                rawMsg === "User not found" ||
+                (typeof rawMsg === "string" && rawMsg.toLowerCase().includes("user not found"));
               setAntiSpoofReport({
                 open: true,
                 loading: false,
                 frames: rows,
                 fusion: body.livenessFusion || body.livenessStats || null,
-                outcome: body.livenessReason ? "liveness_fail" : "match_fail",
+                outcome: body.livenessReason
+                  ? "liveness_fail"
+                  : isUserNotFound
+                    ? "user_not_found"
+                    : "match_fail",
                 title: body.livenessReason
                   ? "Silent-Face - liveness check failed"
-                  : "Silent-Face - face mismatch",
-                subtitle: body.message || err.message || "",
+                  : isUserNotFound
+                    ? "Face login — account not found"
+                    : "Silent-Face - face mismatch",
+                subtitle: isUserNotFound
+                  ? `${rawMsg}. The email used for Face ID is not in the database (wrong email, different server DB, or data was reset). Go to Login and enter the same email you registered with.`
+                  : rawMsg,
               });
-              const msg = body.message || err.message || "Face verification failed";
+              const msg = rawMsg;
               const canRetry = consumeFaceAttempt(msg, {
                 remainingAttempts: body.remainingAttempts,
                 reason: body.livenessReason ? "liveness_failed" : "face_mismatch",

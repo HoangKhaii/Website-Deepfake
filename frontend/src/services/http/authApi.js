@@ -102,6 +102,7 @@ export const verifyFace = async (email, faceAttempt = 1, faceFrames = [], regist
     const data = await res.json().catch(() => ({}));
     if (res.ok) return data;
     const err = new Error(data.message || data.error || "Face verification failed");
+    err.status = res.status;
     err.forceEmailLogin = data.forceEmailLogin;
     err.remainingAttempts = data.remainingAttempts;
     err.body = data;
