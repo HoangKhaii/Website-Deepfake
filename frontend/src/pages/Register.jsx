@@ -52,6 +52,44 @@ export default function Register() {
     nav("/register", { replace: true, state: {} });
   }, [location.state, nav, showError]);
 
+  const passwordChecks = {
+    minLength: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    lowercase: /[a-z]/.test(password),
+    number: /\d/.test(password),
+    special: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password),
+  };
+
+  const passedPasswordChecks = Object.values(passwordChecks).filter(Boolean).length;
+
+  const passwordStrength =
+    passedPasswordChecks <= 2 ? "weak" : passedPasswordChecks <= 4 ? "medium" : "strong";
+
+  const strengthMeta =
+    passwordStrength === "weak"
+      ? {
+          label: "Weak",
+          color: "text-red-600",
+          barClass: "bg-red-500",
+          trackClass: "bg-red-100",
+          width: `${Math.max(20, (passedPasswordChecks / 5) * 100)}%`,
+        }
+      : passwordStrength === "medium"
+        ? {
+            label: "Medium",
+            color: "text-amber-600",
+            barClass: "bg-amber-500",
+            trackClass: "bg-amber-100",
+            width: `${(passedPasswordChecks / 5) * 100}%`,
+          }
+        : {
+            label: "Strong",
+            color: "text-emerald-600",
+            barClass: "bg-emerald-500",
+            trackClass: "bg-emerald-100",
+            width: "100%",
+          };
+
   const validate = () => {
     if (!email.endsWith("@gmail.com")) {
       return "Email must be @gmail.com";
@@ -450,6 +488,19 @@ export default function Register() {
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-2">Min 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special char</p>
+                {password && (
+                  <div className="mt-2">
+                    <div className={`h-2 w-full rounded-full ${strengthMeta.trackClass}`}>
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${strengthMeta.barClass}`}
+                        style={{ width: strengthMeta.width }}
+                      ></div>
+                    </div>
+                    <p className={`mt-1 text-xs font-semibold ${strengthMeta.color}`}>
+                      Password strength: {strengthMeta.label}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="relative">
