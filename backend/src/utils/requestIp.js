@@ -14,6 +14,7 @@ function normalizeIp(ip) {
 function getClientIp(req) {
   const trust = Boolean(req.app?.get?.('trust proxy'));
   if (trust) {
+    if (req.ip) return normalizeIp(req.ip);
     const forwarded = req.headers['x-forwarded-for'];
     if (forwarded) {
       const first =

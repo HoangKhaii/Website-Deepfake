@@ -21,11 +21,38 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/openai-img-proxy/, ''),
       },
+      // Backend thấy IP thật của trình duyệt (email cảnh báo đăng nhập), không còn 127.0.0.1 khi dev qua Vite
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        configure(proxy) {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const raw = req.socket?.remoteAddress
+            if (!raw) return
+            const ip = raw.startsWith('::ffff:') ? raw.slice(7) : raw
+            proxyReq.setHeader('X-Forwarded-For', ip)
+          })
+        },
+      },
     },
   },
   preview: {
     port: 5173,
     host: true,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        configure(proxy) {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const raw = req.socket?.remoteAddress
+            if (!raw) return
+            const ip = raw.startsWith('::ffff:') ? raw.slice(7) : raw
+            proxyReq.setHeader('X-Forwarded-For', ip)
+          })
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: ['face-api.js']

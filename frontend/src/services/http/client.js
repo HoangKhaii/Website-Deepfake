@@ -10,6 +10,14 @@ function buildApiBaseCandidates() {
       : null;
   const list = [];
   if (fromEnv) list.push(fromEnv);
+  // Dev: gọi /api cùng origin → Vite proxy gắn X-Forwarded-For (IP client cho email cảnh báo)
+  if (
+    typeof import.meta !== "undefined" &&
+    import.meta.env?.DEV &&
+    typeof window !== "undefined"
+  ) {
+    list.push(`${window.location.origin}/api`);
+  }
   list.push(`http://${API_HOST}:5000/api`);
   if (API_HOST !== "localhost") list.push("http://localhost:5000/api");
   if (API_HOST !== "127.0.0.1") list.push("http://127.0.0.1:5000/api");
