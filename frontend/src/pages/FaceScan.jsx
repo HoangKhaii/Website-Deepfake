@@ -5,7 +5,6 @@ import { useNotification } from "../components/Notification";
 import { appendLog, upsertUserByEmail } from "../services/storage";
 import { registerFace, verifyFace } from "../services/api";
 import RegisterFaceRecaptchaModal from "../components/RegisterFaceRecaptchaModal";
-import AntiSpoofFrameTableModal from "../components/AntiSpoofFrameTableModal";
 import {
   FACE_FRAME_TARGET,
   MIN_UPRIGHT_FRAMES,
@@ -73,17 +72,6 @@ export default function FaceScan() {
   const registerFlowFinishedRef = useRef(false);
   const registerFaceApiOkRef = useRef(false);
   const pendingRegisterFramesRef = useRef(null);
-  const pendingForceEmailAfterAntiSpoofModalRef = useRef(false);
-  const [antiSpoofReport, setAntiSpoofReport] = useState(null);
-
-  const handleAntiSpoofReportClose = useCallback(() => {
-    setAntiSpoofReport(null);
-    if (pendingForceEmailAfterAntiSpoofModalRef.current) {
-      pendingForceEmailAfterAntiSpoofModalRef.current = false;
-      showError("Maximum attempts reached. Please log in with email.");
-      nav("/login", { state: { message: "Please log in using your email." } });
-    }
-  }, [nav, success, showError]);
 
   const handleAbandonRegisterFace = useCallback(() => {
     if (registerFlowFinishedRef.current) return;
@@ -379,65 +367,35 @@ export default function FaceScan() {
                 /* ignore */
               }
               setProcessingStatus("The face matches the registered photo.", "success", true);
-              setAntiSpoofReport(null);
               success("Face verification successful! Welcome back.");
               nav("/");
             }
           } catch (err) {
             const body = err.body || {};
             if (body.forceEmailLogin === true) {
-              const rows = Array.isArray(body.antiSpoofFrames) ? body.antiSpoofFrames : [];
-              if (rows.length > 0) {
-                pendingForceEmailAfterAntiSpoofModalRef.current = true;
-                setAntiSpoofReport({
-                  open: true,
-                  loading: false,
-                  frames: rows,
-                  fusion: body.livenessFusion || body.livenessStats || null,
-                  outcome: "force_email",
-                  title: "Face login attempts exhausted",
-                  subtitle:
-                    body.message ||
-                    "Maximum attempts reached. Review the frame table below, then log in with email.",
-                });
-              } else {
-                showError("The attempt has been exceeded 3 times. Please log in using your email.");
-                nav("/login", { state: { message: "Please log in using your email." } });
-                setAntiSpoofReport(null);
-              }
+              const rawMsg =
+                body.message ||
+                "The attempt has been exceeded 3 times. Please log in using your email.";
+              showError(rawMsg);
+              nav("/login", { state: { message: "Please log in using your email." } });
             } else {
-              const rows = Array.isArray(body.antiSpoofFrames) ? body.antiSpoofFrames : [];
               const rawMsg = body.message || err.message || "Face verification failed";
               const isUserNotFound =
                 err?.status === 404 ||
                 rawMsg === "User not found" ||
                 (typeof rawMsg === "string" && rawMsg.toLowerCase().includes("user not found"));
-              setAntiSpoofReport({
-                open: true,
-                loading: false,
-                frames: rows,
-                fusion: body.livenessFusion || body.livenessStats || null,
-                outcome: body.livenessReason
-                  ? "liveness_fail"
-                  : isUserNotFound
-                    ? "user_not_found"
-                    : "match_fail",
-                title: body.livenessReason
-                  ? "Silent-Face - liveness check failed"
-                  : isUserNotFound
-                    ? "Face login — account not found"
-                    : "Silent-Face - face mismatch",
-                subtitle: isUserNotFound
-                  ? `${rawMsg}. The email used for Face ID is not in the database (wrong email, different server DB, or data was reset). Go to Login and enter the same email you registered with.`
-                  : rawMsg,
-              });
-              const msg = rawMsg;
-              const canRetry = consumeFaceAttempt(msg, {
+              const userHint = isUserNotFound
+                ? `${rawMsg}. Use the same email you registered with, or sign in with email.`
+                : rawMsg;
+              const canRetry = consumeFaceAttempt(userHint, {
                 remainingAttempts: body.remainingAttempts,
                 reason: body.livenessReason ? "liveness_failed" : "face_mismatch",
               });
               if (canRetry) {
-                showError(msg + (body.remainingAttempts != null ? ` (remaining ${body.remainingAttempts} attempts).` : ""));
+                showError(
+                  userHint +
+                    (body.remainingAttempts != null ? ` (remaining ${body.remainingAttempts} attempts).` : "")
+                );
               }
             }
           }
@@ -528,19 +486,6 @@ export default function FaceScan() {
             }}
           />
         </div>
-      ) : null}
-
-      {antiSpoofReport?.open ? (
-        <AntiSpoofFrameTableModal
-          open={antiSpoofReport.open}
-          loading={Boolean(antiSpoofReport.loading)}
-          onClose={handleAntiSpoofReportClose}
-          frames={antiSpoofReport.frames || []}
-          fusion={antiSpoofReport.fusion}
-          title={antiSpoofReport.title}
-          subtitle={antiSpoofReport.subtitle}
-          outcome={antiSpoofReport.outcome}
-        />
       ) : null}
 
       {/* Content */}

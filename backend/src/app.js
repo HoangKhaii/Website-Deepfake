@@ -14,6 +14,22 @@ const { initializeGoogleAuth } = require('./config/passport-google');
 
 const app = express();
 
+// Sau reverse proxy (nginx, Caddy, Cloudflare): bật để req.ip / req.ips đúng — email cảnh báo hiển thị IP thật.
+// Không bật nếu API exposed trực tiếp ra internet (client có thể gửi X-Forwarded-For giả).
+// .env: TRUST_PROXY=1 (một hop) hoặc số hop; TRUST_PROXY=0 / false để tắt.
+(function applyTrustProxy() {
+  const raw = String(process.env.TRUST_PROXY ?? '').trim().toLowerCase();
+  if (raw === '' || raw === '0' || raw === 'false' || raw === 'off' || raw === 'no') return;
+  if (raw === '1' || raw === 'true' || raw === 'yes') {
+    app.set('trust proxy', 1);
+    return;
+  }
+  if (/^\d+$/.test(raw)) {
+    const n = parseInt(raw, 10);
+    if (n > 0) app.set('trust proxy', n);
+  }
+})();
+
 // Initialize Passport
 app.use(passport.initialize());
 initializeGoogleAuth(passport);

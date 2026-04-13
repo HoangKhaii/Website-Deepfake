@@ -1,11 +1,7 @@
 /**
- * Theo dõi thiết bị đã xác thực OTP — tách khỏi auth.controller (SRP).
+ * Thiết bị đã xác thực OTP — lưu PostgreSQL (survive restart), tối đa 5 máy/user.
  */
-const trustedDevices = new Map();
-
-function generateDeviceId() {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
+const { query } = require('../config/db');
 
 function deviceKey(ip, userAgent) {
   return `${ip}|${userAgent || ''}`;
@@ -32,34 +28,54 @@ function parseUserAgent(userAgent) {
   return { browser, os };
 }
 
-function isTrustedDevice(userId, ip, userAgent) {
-  if (!trustedDevices.has(userId)) return false;
+const MAX_DEVICES_PER_USER = 5;
+
+async function isTrustedDevice(userId, ip, userAgent) {
   const key = deviceKey(ip, userAgent);
-  const devices = trustedDevices.get(userId);
-  return devices.some((d) => d.deviceKey === key);
+  try {
+    const { rows } = await query(
+      `SELECT 1 FROM trusted_devices WHERE user_id = $1 AND device_key = $2 LIMIT 1`,
+      [userId, key]
+    );
+    return rows.length > 0;
+  } catch (err) {
+    console.warn('[trustedDevices] isTrustedDevice query failed:', err?.message || err);
+    return false;
+  }
 }
 
-function addTrustedDevice(userId, ip, userAgent) {
+async function addTrustedDevice(userId, ip, userAgent) {
   const key = deviceKey(ip, userAgent);
-  const deviceInfo = parseUserAgent(userAgent);
-  const device = {
-    deviceId: generateDeviceId(),
-    deviceKey: key,
-    ip,
-    userAgent,
-    ...deviceInfo,
-    lastLogin: new Date(),
-  };
-
-  if (!trustedDevices.has(userId)) {
-    trustedDevices.set(userId, []);
+  const ua = String(userAgent || '').slice(0, 2000);
+  const lastIp = String(ip || '').slice(0, 128);
+  try {
+    await query(
+      `INSERT INTO trusted_devices (user_id, device_key, last_ip, user_agent, last_seen)
+       VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+       ON CONFLICT (user_id, device_key)
+       DO UPDATE SET last_ip = EXCLUDED.last_ip, user_agent = EXCLUDED.user_agent, last_seen = CURRENT_TIMESTAMP`,
+      [userId, key, lastIp, ua]
+    );
+    const { rows } = await query(
+      `SELECT id FROM trusted_devices WHERE user_id = $1 ORDER BY last_seen ASC`,
+      [userId]
+    );
+    if (rows.length > MAX_DEVICES_PER_USER) {
+      const excess = rows.slice(0, rows.length - MAX_DEVICES_PER_USER).map((r) => r.id);
+      await query(`DELETE FROM trusted_devices WHERE id = ANY($1::int[])`, [excess]);
+    }
+  } catch (err) {
+    console.warn('[trustedDevices] addTrustedDevice failed:', err?.message || err);
   }
+}
 
-  const devices = trustedDevices.get(userId);
-  const existing = devices.findIndex((d) => d.deviceKey === key);
-  if (existing >= 0) devices.splice(existing, 1);
-  if (devices.length >= 5) devices.shift();
-  devices.push(device);
+/** Xóa toàn bộ thiết bị tin cậy (ví dụ sau đổi mật khẩu — bật bằng env). */
+async function revokeAllTrustedDevicesForUser(userId) {
+  try {
+    await query(`DELETE FROM trusted_devices WHERE user_id = $1`, [userId]);
+  } catch (err) {
+    console.warn('[trustedDevices] revokeAll failed:', err?.message || err);
+  }
 }
 
 module.exports = {
@@ -67,4 +83,5 @@ module.exports = {
   addTrustedDevice,
   parseUserAgent,
   deviceKey,
+  revokeAllTrustedDevicesForUser,
 };

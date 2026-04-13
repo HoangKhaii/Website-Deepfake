@@ -17,6 +17,7 @@ const {
   isTrustedDevice,
   addTrustedDevice,
   parseUserAgent,
+  revokeAllTrustedDevicesForUser,
 } = require('../stores/trustedDevices.store');
 
 const BCRYPT_ROUNDS = 10;
@@ -163,8 +164,8 @@ async function login(req, res) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
     
-    // Kiểm tra thiết bị có phải là trusted không
-    const isTrusted = isTrustedDevice(user.user_id, clientIp, userAgent);
+    // Kiểm tra thiết bị có phải là trusted không (lưu DB, không mất khi restart server)
+    const isTrusted = await isTrustedDevice(user.user_id, clientIp, userAgent);
     
     // Cập nhật last login
     await query(
@@ -186,7 +187,9 @@ async function login(req, res) {
       console.log(`[Login OTP] ${user.email} => ${otpCode} (expires ${expiredAt.toISOString()})`);
 
       const deviceInfo = parseUserAgent(userAgent);
-      await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp }, 'Unknown location');
+      const locationNote =
+        'Vị trí địa lý chưa tra cứu — hãy đối chiếu địa chỉ IP bên dưới với mạng của bạn. / Geo not resolved — use the IP below.';
+      await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp }, locationNote);
 
       return res.json({
         requiresVerification: true,
@@ -196,8 +199,8 @@ async function login(req, res) {
       });
     }
     
-    // Thiết bị trusted - thêm vào danh sách và cho đăng nhập
-    addTrustedDevice(user.user_id, clientIp, userAgent);
+    // Thiết bị trusted - cập nhật last_seen và cho đăng nhập
+    await addTrustedDevice(user.user_id, clientIp, userAgent);
     
     const token = jwt.sign(
       { userId: user.user_id, email: user.email },
@@ -288,8 +291,8 @@ async function otpVerify(req, res) {
     // Cập nhật last login
     await query(`UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = $1`, [user.user_id]);
     
-    // Thêm thiết bị vào trusted
-    addTrustedDevice(user.user_id, clientIp, userAgent);
+    // Thêm thiết bị vào trusted (lưu DB)
+    await addTrustedDevice(user.user_id, clientIp, userAgent);
     
     const token = jwt.sign(
       { userId: user.user_id, email: user.email },
@@ -708,6 +711,10 @@ async function forgotPasswordVerify(req, res) {
       `UPDATE users SET password_hash = $1 WHERE user_id = $2`,
       [hash, user.user_id]
     );
+
+    if (String(process.env.REVOKE_TRUSTED_ON_PASSWORD_RESET || '').toLowerCase() === 'true') {
+      await revokeAllTrustedDevicesForUser(user.user_id);
+    }
 
     // Xóa các OTP cũ
     await query(

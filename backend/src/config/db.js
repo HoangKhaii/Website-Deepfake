@@ -2,6 +2,28 @@ const { Pool } = require('pg');
 
 let pool = null;
 
+/** Thiết bị tin cậy sau OTP — lưu DB để không mất khi restart server (tránh báo “thiết bị lạ” oan). */
+async function ensureTrustedDevicesTable(client) {
+  try {
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS trusted_devices (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+        device_key TEXT NOT NULL,
+        last_ip TEXT,
+        user_agent TEXT,
+        last_seen TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT trusted_devices_user_device UNIQUE (user_id, device_key)
+      )
+    `);
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_trusted_devices_user_id ON trusted_devices (user_id)`
+    );
+  } catch (err) {
+    console.warn('⚠️ trusted_devices table ensure failed:', err?.message || err);
+  }
+}
+
 function buildPgConfig() {
   const connectionString = (process.env.DATABASE_URL || '').trim();
   if (connectionString) {
@@ -50,6 +72,8 @@ async function initDb() {
 
     const { rows } = await pool.query('SELECT NOW() AS now');
     console.log(`🟢 DB Time: ${rows?.[0]?.now}`);
+
+    await ensureTrustedDevicesTable(pool);
 
     return pool;
   } catch (err) {
