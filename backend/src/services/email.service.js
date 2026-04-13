@@ -73,7 +73,7 @@ async function sendOtpEmail(email, otpCode) {
                     </tr>
                   </table>
                   <p style="color: #9ca3af; margin: 30px 0 0 0; font-size: 14px; text-align: center;">
-                    This code expires in <strong>10 minutes</strong>.
+                    This code expires in <strong>2 minutes</strong>.
                   </p>
                   <p style="color: #ef4444; margin: 20px 0 0 0; font-size: 13px; text-align: center;">
                     If you did not request this code, you can ignore this email.
@@ -151,7 +151,7 @@ async function sendMfaEmail(email, codes) {
                     </tr>
                   </table>
                   <p style="color: #6b7280; margin: 0; font-size: 13px; text-align: center;">
-                    Codes are valid for <strong>10 minutes</strong>. If this was not you, change your password immediately.
+                    Codes are valid for <strong>2 minutes</strong>. If this was not you, change your password immediately.
                   </p>
                 </td>
               </tr>

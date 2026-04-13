@@ -21,7 +21,7 @@ const {
 } = require('../stores/trustedDevices.store');
 
 const BCRYPT_ROUNDS = 10;
-const OTP_EXPIRE_MINUTES = 10;
+const OTP_EXPIRE_MINUTES = 2;
 
 async function register(req, res) {
   try {
