@@ -1,5 +1,4 @@
 const http = require('http');
-const os = require('os');
 const path = require('path');
 const fs = require('fs');
 
@@ -14,6 +13,7 @@ if (fs.existsSync(envLocalPath)) {
 
 const app = require('./app');
 const { initDb, closeDb } = require('./config/db');
+const { getPrimaryLanIPv4 } = require('./utils/requestIp');
 
 const PORT = process.env.PORT || 5000;
 let server;
@@ -41,19 +41,7 @@ async function start() {
   await initDb();
 
   server = http.createServer(app).listen(PORT, '0.0.0.0', () => {
-    const networkInterfaces = os.networkInterfaces();
-    let localIP = 'localhost';
-
-    for (const interfaceName in networkInterfaces) {
-      const interfaces = networkInterfaces[interfaceName];
-      for (const iface of interfaces) {
-        if (iface.family === 'IPv4' && !iface.internal) {
-          localIP = iface.address;
-          break;
-        }
-      }
-      if (localIP !== 'localhost') break;
-    }
+    const localIP = getPrimaryLanIPv4() || 'localhost';
 
     console.log('='.repeat(50));
     console.log(`🚀 Server listening on all interfaces (0.0.0.0:${PORT})`);
