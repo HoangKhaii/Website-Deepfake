@@ -21,6 +21,7 @@ const {
 } = require('../stores/pendingRegistration.store');
 const { verifyRecaptchaToken } = require('../utils/verifyRecaptcha');
 const { getClientIp } = require('../utils/requestIp');
+const { addTrustedDevice } = require('../stores/trustedDevices.store');
 const {
   runPassiveLiveness,
   userMessageForLivenessFailure,
@@ -317,6 +318,8 @@ async function registerFace(req, res) {
     await updateUserFace(userId, storedFacePath, enrollHash);
     clearPendingRegistration(normalizedEmail);
     clearPendingGoogleProfile(normalizedEmail);
+
+    await addTrustedDevice(userId, getClientIp(req), req.headers['user-agent'] || '');
 
     const token = jwt.sign({ userId, email: normalizedEmail }, JWT_SECRET, { expiresIn: '7d' });
 

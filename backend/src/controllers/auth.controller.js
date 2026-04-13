@@ -115,6 +115,8 @@ async function register(req, res) {
     );
     const user = rows[0];
     if (!user) return res.status(500).json({ message: 'Registration failed' });
+    // Cùng khóa IP|User-Agent với login — tránh bị OTP “thiết bị lạ” ngay sau đăng ký trên cùng máy
+    await addTrustedDevice(user.user_id, getClientIp(req), req.headers['user-agent'] || '');
     const token = jwt.sign(
       { userId: user.user_id, email: user.email },
       JWT_SECRET,
@@ -187,9 +189,7 @@ async function login(req, res) {
       console.log(`[Login OTP] ${user.email} => ${otpCode} (expires ${expiredAt.toISOString()})`);
 
       const deviceInfo = parseUserAgent(userAgent);
-      const locationNote =
-        'Vị trí địa lý chưa tra cứu — hãy đối chiếu địa chỉ IP bên dưới với mạng của bạn. / Geo not resolved — use the IP below.';
-      await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp }, locationNote);
+      await sendLoginAlertEmail(user.email, { ...deviceInfo, ip: clientIp });
 
       return res.json({
         requiresVerification: true,

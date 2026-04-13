@@ -166,7 +166,7 @@ async function sendMfaEmail(email, codes) {
   return sendEmail({ to: email, subject, html });
 }
 
-async function sendLoginAlertEmail(email, deviceInfo, location) {
+async function sendLoginAlertEmail(email, deviceInfo) {
   const subject = 'DeepCheck — New device sign-in alert';
   const html = `
     <!DOCTYPE html>
@@ -199,10 +199,6 @@ async function sendLoginAlertEmail(email, deviceInfo, location) {
                       <tr>
                         <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">IP address</td>
                         <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 600;">${deviceInfo.ip}</td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Location</td>
-                        <td style="padding: 8px 0; color: #1f2937; font-size: 14px; font-weight: 600;">${location}</td>
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Time</td>
